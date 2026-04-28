@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { BackButton } from "@/components/shared/back-button";
-import { Header } from "@/components/shared/header";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { getOrderByNumber } from "@/services/order-service";
@@ -29,7 +28,6 @@ export default function TrackOrderPage() {
 
   return (
     <>
-      <Header />
       <main className="page-shell section">
         <div className="back-row">
           <BackButton />

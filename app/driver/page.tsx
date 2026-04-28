@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BackButton } from "@/components/shared/back-button";
-import { Header } from "@/components/shared/header";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
 import { auth } from "@/lib/firebase";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -102,7 +101,6 @@ export default function DriverPage() {
 
   return (
     <>
-      <Header />
       <main className="page-shell section">
         <div className="back-row">
           <BackButton />
