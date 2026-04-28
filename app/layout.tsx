@@ -4,7 +4,21 @@ import { AppProviders } from "@/components/providers/app-providers";
 
 export const metadata: Metadata = {
   title: "Djaje Restaurant System",
-  description: "Restaurant ordering and delivery system powered by Firebase."
+  description: "Restaurant ordering and delivery system powered by Firebase.",
+  manifest: "/manifest.webmanifest",
+  themeColor: "#c2410c",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Djaje"
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" }
+    ],
+    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }]
+  }
 };
 
 const criticalGlobalStyles = `
