@@ -424,7 +424,7 @@ export default function LandingPage() {
         </div>
         {showIOSHint && isIOS && !isInstalled ? (
           <div className="install-ios-hint">
-            للتثبيت على iPhone: اضغط زر <strong>المشاركة</strong> ⬆️ ثم اختر <strong>"إضافة إلى الشاشة الرئيسية"</strong>.
+            للتثبيت على iPhone: اضغط زر <strong>المشاركة</strong> ⬆️ ثم اختر <strong>«إضافة إلى الشاشة الرئيسية»</strong>.
           </div>
         ) : null}
       </section>
