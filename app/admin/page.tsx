@@ -241,15 +241,6 @@ export default function AdminPage() {
             <button className="button auth-toggle" type="button" onClick={() => setIsRegisterMode((current) => !current)}>
               {isRegisterMode ? "العودة إلى تسجيل الدخول" : "إنشاء حساب إدارة جديد"}
             </button>
-            <button
-              className="button button-danger"
-              type="button"
-              onClick={handleFactoryReset}
-              disabled={isResettingFactory}
-              style={{ marginTop: ".75rem", width: "100%" }}
-            >
-              {isResettingFactory ? "جارٍ إعادة البيانات..." : "إعادة بيانات المصنع"}
-            </button>
           </section>
         ) : (
           <section className="admin-shell">

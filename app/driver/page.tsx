@@ -190,15 +190,6 @@ export default function DriverPage() {
             >
               {isRegisterMode ? "لدي حساب بالفعل" : "إنشاء حساب جديد"}
             </button>
-            <button
-              className="button button-danger"
-              type="button"
-              onClick={handleFactoryReset}
-              disabled={isResettingFactory}
-              style={{ marginTop: ".75rem", width: "100%" }}
-            >
-              {isResettingFactory ? "جارٍ إعادة البيانات..." : "إعادة بيانات المصنع"}
-            </button>
           </section>
         ) : (
           <section className="grid" style={{ gap: "1rem" }}>
