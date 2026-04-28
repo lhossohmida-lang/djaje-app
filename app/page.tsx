@@ -68,26 +68,28 @@ export default function LandingPage() {
       </div>
 
       {/* Role circles */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "2.5rem",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <style>{`
+        .roles-row { display: flex; flex-wrap: nowrap; gap: 1.2rem; justify-content: center; align-items: center; width: 100%; }
+        .role-circle { width: 190px; height: 190px; font-size: 2.8rem; }
+        .role-circle .role-label { font-size: 1.35rem; }
+        .role-circle .role-sub { font-size: .8rem; }
+        @media (max-width: 600px) {
+          .role-circle { width: 100px; height: 100px; font-size: 1.6rem; gap: .3rem !important; }
+          .role-circle .role-label { font-size: .85rem; }
+          .role-circle .role-sub { display: none; }
+          .roles-row { gap: .75rem; }
+        }
+      `}</style>
+      <div className="roles-row">
         {roles.map((role) => (
           <Link
             key={role.href}
             href={role.href}
-            style={{ textDecoration: "none" }}
+            style={{ textDecoration: "none", flexShrink: 0 }}
           >
             <div
-              className="role-card"
+              className="role-circle"
               style={{
-                width: "190px",
-                height: "190px",
                 borderRadius: "50%",
                 background: role.gradient,
                 boxShadow: role.shadow,
@@ -109,25 +111,13 @@ export default function LandingPage() {
                 (e.currentTarget as HTMLDivElement).style.boxShadow = role.shadow;
               }}
             >
-              <span style={{ fontSize: "2.8rem", lineHeight: 1 }}>{role.emoji}</span>
-              <span
-                style={{
-                  color: "#fff",
-                  fontWeight: 800,
-                  fontSize: "1.35rem",
-                  letterSpacing: "-.01em",
-                }}
-              >
+              <span style={{ lineHeight: 1 }}>{role.emoji}</span>
+              <span className="role-label" style={{ color: "#fff", fontWeight: 800, letterSpacing: "-.01em" }}>
                 {role.label}
               </span>
               <span
-                style={{
-                  color: "rgba(255,255,255,.75)",
-                  fontSize: ".8rem",
-                  textAlign: "center",
-                  padding: "0 1rem",
-                  lineHeight: 1.5,
-                }}
+                className="role-sub"
+                style={{ color: "rgba(255,255,255,.75)", textAlign: "center", padding: "0 .5rem", lineHeight: 1.5 }}
               >
                 {role.sublabel}
               </span>
