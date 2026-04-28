@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Search, Sparkles } from "lucide-react";
 import { CartPanel } from "@/components/customer/cart-panel";
 import { MenuCard } from "@/components/customer/menu-card";
 import { useCart } from "@/contexts/cart-context";
@@ -67,38 +68,32 @@ export default function CustomerPage() {
   return (
     <>
       <main className="page-shell section">
-        <section
-          className="card"
-          style={{
-            padding: "2rem",
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "1.5rem",
-            alignItems: "center"
-          }}
-        >
-          <div>
-            <span className="badge">منيو مباشر + طلب بدون تسجيل</span>
-            <h1 style={{ fontSize: "clamp(2rem, 5vw, 4rem)", marginBottom: ".75rem" }}>
-              نظام طلبات وتوصيل جاهز لمطعمك
-            </h1>
-            <p style={{ color: "var(--muted)", lineHeight: 1.9 }}>
-              الواجهة مهيأة للزبون بدون تسجيل دخول، مع تحديثات لحظية للطلبات وتتبع مباشر برقم الطلب، لتكون
-              التجربة سريعة وواضحة من المنيو حتى تأكيد الطلب.
-            </p>
-          </div>
+        <section className="customer-hero">
+          <div className="customer-hero-orb customer-hero-orb-a" aria-hidden="true" />
+          <div className="customer-hero-orb customer-hero-orb-b" aria-hidden="true" />
+          <span className="customer-hero-badge">
+            <Sparkles size={14} />
+            منيو مباشر · طلب بدون تسجيل
+          </span>
+          <h1 className="customer-hero-title">اطلب وجبتك المفضلة بلمسة واحدة</h1>
+          <p className="customer-hero-sub">
+            استعرض المنيو، أضف ما تشتهيه إلى السلة، وثبّت طلبك خلال ثوانٍ — والدفع يكون عند الاستلام.
+          </p>
         </section>
 
         {createdOrder ? (
           <section className="section">
-            <div className="card" style={{ padding: "1.25rem" }}>
-              <h2 style={{ marginTop: 0 }}>تم إنشاء الطلب بنجاح</h2>
-              <p>
-                رقم الطلب: <strong>{createdOrder.orderNumber}</strong>
-              </p>
-              <p style={{ color: "var(--muted)" }}>
-                احتفظ برقم الطلب لاستخدامه في صفحة التتبع. الدفع سيكون عند الاستلام.
-              </p>
+            <div className="card order-success-card">
+              <div className="order-success-icon" aria-hidden="true">✓</div>
+              <div>
+                <h2 style={{ margin: 0 }}>تم إنشاء الطلب بنجاح</h2>
+                <p style={{ margin: ".35rem 0 0" }}>
+                  رقم الطلب: <strong>{createdOrder.orderNumber}</strong>
+                </p>
+                <p style={{ color: "var(--muted)", margin: ".25rem 0 0", fontSize: ".9rem" }}>
+                  احتفظ برقم الطلب لتتبعه. الدفع عند الاستلام.
+                </p>
+              </div>
             </div>
           </section>
         ) : null}
@@ -108,9 +103,10 @@ export default function CustomerPage() {
           style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1rem" }}
         >
           <div className="grid">
-            <div className="card" style={{ padding: "1rem" }}>
+            <div className="customer-search">
+              <Search size={18} className="customer-search-icon" aria-hidden="true" />
               <input
-                className="input"
+                className="input customer-search-input"
                 placeholder="ابحث عن طبق أو تصنيف..."
                 value={keyword}
                 onChange={(event) => setKeyword(event.target.value)}
