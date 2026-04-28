@@ -36,6 +36,7 @@ export default function LandingPage() {
   const router = useRouter();
   const [activeRole, setActiveRole] = useState<string | null>(null);
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     function capture(event: Event) {
@@ -44,6 +45,27 @@ export default function LandingPage() {
     }
     window.addEventListener("beforeinstallprompt", capture);
     return () => window.removeEventListener("beforeinstallprompt", capture);
+  }, []);
+
+  useEffect(() => {
+    const standaloneQuery = window.matchMedia("(display-mode: standalone)");
+    const iosStandalone =
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    setIsInstalled(standaloneQuery.matches || iosStandalone);
+
+    function handleStandaloneChange(event: MediaQueryListEvent) {
+      setIsInstalled(event.matches);
+    }
+    function handleAppInstalled() {
+      setIsInstalled(true);
+      setInstallEvent(null);
+    }
+    standaloneQuery.addEventListener("change", handleStandaloneChange);
+    window.addEventListener("appinstalled", handleAppInstalled);
+    return () => {
+      standaloneQuery.removeEventListener("change", handleStandaloneChange);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
   }, []);
 
   useEffect(() => {
@@ -104,10 +126,12 @@ export default function LandingPage() {
           })}
         </div>
 
-        <button type="button" onClick={handleInstall} className="download-button">
-          <Download size={20} strokeWidth={2.6} />
-          <span>حمل الآن</span>
-        </button>
+        {!isInstalled && (
+          <button type="button" onClick={handleInstall} className="download-button">
+            <Download size={20} strokeWidth={2.6} />
+            <span>حمل الآن</span>
+          </button>
+        )}
       </section>
     </main>
   );
