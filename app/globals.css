@@ -287,8 +287,15 @@ img {
   position: absolute;
   inset: 3px;
   border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0) 55%);
+  background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 60%);
   pointer-events: none;
+  z-index: 0;
+}
+
+.menu-card-add > svg {
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 1px 1px rgba(124, 45, 18, 0.45));
 }
 
 .menu-card-add:hover {
