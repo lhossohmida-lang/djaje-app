@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/shared/header";
-import { formatCurrency } from "@/lib/utils";
 import { sampleMenu } from "@/data/mock-data";
+import { formatCurrency } from "@/lib/utils";
 import { loginWithEmail, logout, registerAdminAccount } from "@/services/auth-service";
 import { createOrUpdateMenuItem, deleteMenuItem, subscribeToMenu } from "@/services/menu-service";
 import { notify } from "@/services/notification-service";
 import { assignOrderToDriver, getDashboardStats, subscribeToOrders, updateOrderStatus } from "@/services/order-service";
+import { resetFactoryData } from "@/services/reset-service";
 import { uploadDishImage } from "@/services/storage-service";
 import { getUserRoleByUid } from "@/services/user-service";
 import { DashboardStats, MenuItem, Order, OrderStatus } from "@/types";
@@ -58,6 +59,7 @@ export default function AdminPage() {
   const [uploading, setUploading] = useState(false);
   const [lastOrderCount, setLastOrderCount] = useState(0);
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
+  const [isResettingFactory, setIsResettingFactory] = useState(false);
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -78,10 +80,7 @@ export default function AdminPage() {
     setLastOrderCount(orders.length);
   }, [orders, loggedIn, lastOrderCount]);
 
-  const activeOrders = useMemo(
-    () => orders.filter((o) => o.status !== "delivered"),
-    [orders]
-  );
+  const activeOrders = useMemo(() => orders.filter((order) => order.status !== "delivered"), [orders]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -106,6 +105,7 @@ export default function AdminPage() {
       window.alert("رمز المطور غير صحيح.");
       return;
     }
+
     try {
       await registerAdminAccount({
         fullName: registerForm.fullName,
@@ -124,6 +124,7 @@ export default function AdminPage() {
   async function handleMenuSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const item: MenuItem = { ...menuForm, id: menuForm.id || `meal-${Date.now()}` };
+
     try {
       await createOrUpdateMenuItem(item);
       setMenuForm(emptyMenuForm);
@@ -137,6 +138,7 @@ export default function AdminPage() {
   async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+
     setUploading(true);
     try {
       const imageUrl = await uploadDishImage(file);
@@ -146,6 +148,26 @@ export default function AdminPage() {
       window.alert("فشل رفع الصورة.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function handleFactoryReset() {
+    const confirmed = window.confirm("سيتم حذف الطلبات الحالية وإعادة المنيو الافتراضي. هل تريد المتابعة؟");
+    if (!confirmed) {
+      return;
+    }
+
+    setIsResettingFactory(true);
+    try {
+      await resetFactoryData();
+      await getDashboardStats().then(setStats);
+      setMenuForm(emptyMenuForm);
+      window.alert("تمت إعادة بيانات المصنع بنجاح.");
+    } catch (error) {
+      console.error(error);
+      window.alert("تعذر إعادة بيانات المصنع الآن.");
+    } finally {
+      setIsResettingFactory(false);
     }
   }
 
@@ -168,28 +190,28 @@ export default function AdminPage() {
                   className="input"
                   placeholder="الاسم الكامل"
                   value={registerForm.fullName}
-                  onChange={(e) => setRegisterForm((c) => ({ ...c, fullName: e.target.value }))}
+                  onChange={(event) => setRegisterForm((current) => ({ ...current, fullName: event.target.value }))}
                 />
                 <input
                   className="input"
                   type="email"
                   placeholder="البريد الإلكتروني"
                   value={registerForm.email}
-                  onChange={(e) => setRegisterForm((c) => ({ ...c, email: e.target.value }))}
+                  onChange={(event) => setRegisterForm((current) => ({ ...current, email: event.target.value }))}
                 />
                 <input
                   className="input"
                   type="password"
                   placeholder="كلمة المرور"
                   value={registerForm.password}
-                  onChange={(e) => setRegisterForm((c) => ({ ...c, password: e.target.value }))}
+                  onChange={(event) => setRegisterForm((current) => ({ ...current, password: event.target.value }))}
                 />
                 <input
                   className="input"
                   type="password"
                   placeholder="رمز المطور"
                   value={registerForm.developerCode}
-                  onChange={(e) => setRegisterForm((c) => ({ ...c, developerCode: e.target.value }))}
+                  onChange={(event) => setRegisterForm((current) => ({ ...current, developerCode: event.target.value }))}
                 />
                 <button className="button button-primary" type="submit">
                   إنشاء مدير جديد
@@ -202,26 +224,31 @@ export default function AdminPage() {
                   type="email"
                   placeholder="البريد الإلكتروني"
                   value={credentials.email}
-                  onChange={(e) => setCredentials((c) => ({ ...c, email: e.target.value }))}
+                  onChange={(event) => setCredentials((current) => ({ ...current, email: event.target.value }))}
                 />
                 <input
                   className="input"
                   type="password"
                   placeholder="كلمة المرور"
                   value={credentials.password}
-                  onChange={(e) => setCredentials((c) => ({ ...c, password: e.target.value }))}
+                  onChange={(event) => setCredentials((current) => ({ ...current, password: event.target.value }))}
                 />
                 <button className="button button-primary" type="submit">
                   دخول
                 </button>
               </form>
             )}
-            <button
-              className="button auth-toggle"
-              type="button"
-              onClick={() => setIsRegisterMode((c) => !c)}
-            >
+            <button className="button auth-toggle" type="button" onClick={() => setIsRegisterMode((current) => !current)}>
               {isRegisterMode ? "العودة إلى تسجيل الدخول" : "إنشاء حساب إدارة جديد"}
+            </button>
+            <button
+              className="button button-danger"
+              type="button"
+              onClick={handleFactoryReset}
+              disabled={isResettingFactory}
+              style={{ marginTop: ".75rem", width: "100%" }}
+            >
+              {isResettingFactory ? "جارٍ إعادة البيانات..." : "إعادة بيانات المصنع"}
             </button>
           </section>
         ) : (
@@ -231,34 +258,30 @@ export default function AdminPage() {
                 <h1>لوحة الإدارة</h1>
                 <p>إدارة الطلبات والمنيو ورفع الصور وتعيين السائقين.</p>
               </div>
-              <button
-                className="button button-secondary"
-                onClick={async () => {
-                  await logout();
-                  setLoggedIn(false);
-                }}
-              >
-                تسجيل الخروج
-              </button>
+              <div style={{ display: "flex", gap: ".65rem", flexWrap: "wrap" }}>
+                <button className="button button-danger" onClick={handleFactoryReset} disabled={isResettingFactory}>
+                  {isResettingFactory ? "جارٍ إعادة البيانات..." : "إعادة بيانات المصنع"}
+                </button>
+                <button
+                  className="button button-secondary"
+                  onClick={async () => {
+                    await logout();
+                    setLoggedIn(false);
+                  }}
+                >
+                  تسجيل الخروج
+                </button>
+              </div>
             </div>
 
             <div className="admin-tabs">
-              <button
-                className={`admin-tab ${activeTab === "overview" ? "active" : ""}`}
-                onClick={() => setActiveTab("overview")}
-              >
+              <button className={`admin-tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>
                 نظرة عامة
               </button>
-              <button
-                className={`admin-tab ${activeTab === "orders" ? "active" : ""}`}
-                onClick={() => setActiveTab("orders")}
-              >
+              <button className={`admin-tab ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>
                 الطلبات
               </button>
-              <button
-                className={`admin-tab ${activeTab === "menu" ? "active" : ""}`}
-                onClick={() => setActiveTab("menu")}
-              >
+              <button className={`admin-tab ${activeTab === "menu" ? "active" : ""}`} onClick={() => setActiveTab("menu")}>
                 قائمة الطعام
               </button>
             </div>
@@ -297,7 +320,7 @@ export default function AdminPage() {
                 {orders.length === 0 ? (
                   <div className="empty-state">
                     <div className="icon">🍽️</div>
-                    <p>لا توجد طلبات حالياً.</p>
+                    <p>لا توجد طلبات حاليًا.</p>
                   </div>
                 ) : (
                   <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
@@ -305,17 +328,12 @@ export default function AdminPage() {
                       <article key={order.id} className="order-card">
                         <div className="order-head">
                           <span className="order-number">#{order.orderNumber}</span>
-                          <span className={`status-badge ${order.status}`}>
-                            {STATUS_LABELS[order.status] ?? order.status}
-                          </span>
+                          <span className={`status-badge ${order.status}`}>{STATUS_LABELS[order.status] ?? order.status}</span>
                         </div>
                         <p className="customer-name">{order.customer.name}</p>
                         <p className="customer-address">{order.customer.address}</p>
                         <div className="actions">
-                          <button
-                            className="button button-secondary"
-                            onClick={() => updateOrderStatus(order.id, "confirmed")}
-                          >
+                          <button className="button button-secondary" onClick={() => updateOrderStatus(order.id, "confirmed")}>
                             قيد التحضير
                           </button>
                           <button
@@ -324,10 +342,7 @@ export default function AdminPage() {
                           >
                             تعيين للسائق
                           </button>
-                          <button
-                            className="button button-primary"
-                            onClick={() => updateOrderStatus(order.id, "delivered")}
-                          >
+                          <button className="button button-primary" onClick={() => updateOrderStatus(order.id, "delivered")}>
                             إنهاء
                           </button>
                         </div>
@@ -350,52 +365,48 @@ export default function AdminPage() {
                     className="input"
                     placeholder="اسم الطبق"
                     value={menuForm.name}
-                    onChange={(e) => setMenuForm((c) => ({ ...c, name: e.target.value }))}
+                    onChange={(event) => setMenuForm((current) => ({ ...current, name: event.target.value }))}
                   />
                   <input
                     className="input"
                     placeholder="التصنيف"
                     value={menuForm.category}
-                    onChange={(e) => setMenuForm((c) => ({ ...c, category: e.target.value }))}
+                    onChange={(event) => setMenuForm((current) => ({ ...current, category: event.target.value }))}
                   />
                   <textarea
                     className="textarea span-2"
                     placeholder="وصف الطبق"
                     rows={2}
                     value={menuForm.description}
-                    onChange={(e) => setMenuForm((c) => ({ ...c, description: e.target.value }))}
+                    onChange={(event) => setMenuForm((current) => ({ ...current, description: event.target.value }))}
                   />
                   <input
                     className="input"
                     type="number"
                     placeholder="السعر"
                     value={menuForm.price}
-                    onChange={(e) => setMenuForm((c) => ({ ...c, price: Number(e.target.value) }))}
+                    onChange={(event) => setMenuForm((current) => ({ ...current, price: Number(event.target.value) }))}
                   />
                   <input
                     className="input"
                     type="number"
                     placeholder="مدة التحضير (دقيقة)"
                     value={menuForm.prepTime}
-                    onChange={(e) => setMenuForm((c) => ({ ...c, prepTime: Number(e.target.value) }))}
+                    onChange={(event) => setMenuForm((current) => ({ ...current, prepTime: Number(event.target.value) }))}
                   />
                   <input className="input" type="file" accept="image/*" onChange={handleImageUpload} />
                   <input
                     className="input"
                     placeholder="أو ضع رابط الصورة يدويًا"
                     value={menuForm.imageUrl}
-                    onChange={(e) => setMenuForm((c) => ({ ...c, imageUrl: e.target.value }))}
+                    onChange={(event) => setMenuForm((current) => ({ ...current, imageUrl: event.target.value }))}
                   />
                   <div className="submit-row" style={{ display: "flex", gap: ".6rem", flexWrap: "wrap" }}>
                     <button className="button button-primary" type="submit" disabled={uploading} style={{ flex: 1 }}>
                       {uploading ? "جارٍ رفع الصورة..." : menuForm.id ? "تحديث الطبق" : "إضافة طبق جديد"}
                     </button>
                     {menuForm.id && (
-                      <button
-                        className="button button-secondary"
-                        type="button"
-                        onClick={() => setMenuForm(emptyMenuForm)}
-                      >
+                      <button className="button button-secondary" type="button" onClick={() => setMenuForm(emptyMenuForm)}>
                         إلغاء
                       </button>
                     )}
@@ -411,24 +422,16 @@ export default function AdminPage() {
                   <div className="menu-list">
                     {menuItems.map((item) => (
                       <article key={item.id} className="menu-item-card">
-                        <div
-                          className="thumb"
-                          style={item.imageUrl ? { backgroundImage: `url(${item.imageUrl})` } : undefined}
-                        />
+                        <div className="thumb" style={item.imageUrl ? { backgroundImage: `url(${item.imageUrl})` } : undefined} />
                         <div className="body">
                           <span className="name">{item.name}</span>
-                          {item.category && (
-                            <span style={{ color: "var(--muted)", fontSize: ".85rem" }}>{item.category}</span>
-                          )}
+                          {item.category && <span style={{ color: "var(--muted)", fontSize: ".85rem" }}>{item.category}</span>}
                           <span className="price">{formatCurrency(item.price)}</span>
                           <div className="actions">
                             <button className="button button-secondary" onClick={() => setMenuForm(item)}>
                               تعديل
                             </button>
-                            <button
-                              className="button button-danger"
-                              onClick={() => deleteMenuItem(item.id)}
-                            >
+                            <button className="button button-danger" onClick={() => deleteMenuItem(item.id)}>
                               حذف
                             </button>
                           </div>

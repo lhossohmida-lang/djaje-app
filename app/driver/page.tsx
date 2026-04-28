@@ -14,6 +14,7 @@ import {
   subscribeToDriverOrders,
   updateOrderStatus
 } from "@/services/order-service";
+import { resetFactoryData } from "@/services/reset-service";
 import { Order } from "@/types";
 
 export default function DriverPage() {
@@ -30,6 +31,7 @@ export default function DriverPage() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [driverName, setDriverName] = useState("سائق التوصيل");
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [isResettingFactory, setIsResettingFactory] = useState(false);
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
@@ -96,6 +98,24 @@ export default function DriverPage() {
     } catch (error) {
       console.error(error);
       window.alert("تعذر قبول الطلب.");
+    }
+  }
+
+  async function handleFactoryReset() {
+    const confirmed = window.confirm("سيتم حذف الطلبات الحالية وإعادة المنيو الافتراضي. هل تريد المتابعة؟");
+    if (!confirmed) {
+      return;
+    }
+
+    setIsResettingFactory(true);
+    try {
+      await resetFactoryData();
+      window.alert("تمت إعادة بيانات المصنع بنجاح.");
+    } catch (error) {
+      console.error(error);
+      window.alert("تعذر إعادة بيانات المصنع الآن.");
+    } finally {
+      setIsResettingFactory(false);
     }
   }
 
@@ -170,16 +190,28 @@ export default function DriverPage() {
             >
               {isRegisterMode ? "لدي حساب بالفعل" : "إنشاء حساب جديد"}
             </button>
+            <button
+              className="button button-danger"
+              type="button"
+              onClick={handleFactoryReset}
+              disabled={isResettingFactory}
+              style={{ marginTop: ".75rem", width: "100%" }}
+            >
+              {isResettingFactory ? "جارٍ إعادة البيانات..." : "إعادة بيانات المصنع"}
+            </button>
           </section>
         ) : (
           <section className="grid" style={{ gap: "1rem" }}>
-            <div className="card" style={{ padding: "1rem", display: "flex", justifyContent: "space-between" }}>
+            <div className="card" style={{ padding: "1rem", display: "flex", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
               <div>
                 <h1 style={{ marginTop: 0 }}>لوحة السائق</h1>
                 <p style={{ color: "var(--muted)" }}>إدارة الحالات والتوصيل وعرض الأرباح اليومية.</p>
               </div>
-              <div style={{ display: "flex", gap: ".75rem", alignItems: "start" }}>
+              <div style={{ display: "flex", gap: ".75rem", alignItems: "start", flexWrap: "wrap" }}>
                 <span className="badge">أرباح اليوم: {formatCurrency(dailyEarnings)}</span>
+                <button className="button button-danger" onClick={handleFactoryReset} disabled={isResettingFactory}>
+                  {isResettingFactory ? "جارٍ إعادة البيانات..." : "إعادة بيانات المصنع"}
+                </button>
                 <button
                   className="button button-secondary"
                   onClick={async () => {

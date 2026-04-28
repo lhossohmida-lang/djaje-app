@@ -67,7 +67,7 @@ export default function CustomerPage() {
 
   return (
     <>
-      <Header />
+      <Header showRoleLinks={false} />
       <main className="page-shell section">
         <section
           className="card"
@@ -85,8 +85,8 @@ export default function CustomerPage() {
               نظام طلبات وتوصيل جاهز لمطعمك
             </h1>
             <p style={{ color: "var(--muted)", lineHeight: 1.9 }}>
-              الواجهة مهيأة للزبون بدون تسجيل دخول، مع تحديثات لحظية للطلبات، وتتبع مباشر برقم الطلب، ولوحات
-              منفصلة للسائق والإدارة.
+              الواجهة مهيأة للزبون بدون تسجيل دخول، مع تحديثات لحظية للطلبات وتتبع مباشر برقم الطلب، لتكون
+              التجربة سريعة وواضحة من المنيو حتى تأكيد الطلب.
             </p>
           </div>
         </section>

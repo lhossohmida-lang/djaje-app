@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { ShoppingBag, Truck, UtensilsCrossed } from "lucide-react";
 
-export function Header() {
+interface HeaderProps {
+  showRoleLinks?: boolean;
+}
+
+export function Header({ showRoleLinks = true }: HeaderProps) {
   return (
     <header className="section">
       <div
@@ -27,13 +31,17 @@ export function Header() {
           <Link href="/track" className="badge">
             تتبع الطلب
           </Link>
-          <Link href="/driver" className="badge">
-            <Truck size={16} />
-            السائق
-          </Link>
-          <Link href="/admin" className="badge">
-            الإدارة
-          </Link>
+          {showRoleLinks ? (
+            <>
+              <Link href="/driver" className="badge">
+                <Truck size={16} />
+                السائق
+              </Link>
+              <Link href="/admin" className="badge">
+                الإدارة
+              </Link>
+            </>
+          ) : null}
         </nav>
       </div>
     </header>
