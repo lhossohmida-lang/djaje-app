@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(gh auth *)",
-      "PowerShell(gh auth status 2>&1)"
+      "PowerShell(gh auth status 2>&1)",
+      "Bash(npm run *)",
+      "Bash(npx firebase-tools *)",
+      "Bash(git rm *)",
+      "Bash(git restore *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git ls-remote *)",
+      "Bash(echo \"EXIT=$?\")"
     ]
   }
 }
