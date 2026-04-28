@@ -5,7 +5,7 @@ import { sampleMenu } from "@/data/mock-data";
 import { formatCurrency } from "@/lib/utils";
 import { loginWithEmail, logout, registerAdminAccount } from "@/services/auth-service";
 import { createOrUpdateMenuItem, deleteMenuItem, subscribeToMenu } from "@/services/menu-service";
-import { notify } from "@/services/notification-service";
+import { notifyOrderArrival, primeAudio } from "@/services/notification-service";
 import { assignOrderToDriver, getDashboardStats, subscribeToOrders, updateOrderStatus } from "@/services/order-service";
 import { resetFactoryData } from "@/services/reset-service";
 import { uploadDishImage } from "@/services/storage-service";
@@ -74,7 +74,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!loggedIn) return;
     if (lastOrderCount !== 0 && orders.length > lastOrderCount) {
-      notify("طلب جديد", "تمت إضافة طلب جديد إلى لوحة الإدارة.");
+      notifyOrderArrival("طلب جديد", "تمت إضافة طلب جديد إلى لوحة الإدارة.", 3);
     }
     setLastOrderCount(orders.length);
   }, [orders, loggedIn, lastOrderCount]);
@@ -91,6 +91,7 @@ export default function AdminPage() {
         window.alert("هذا الحساب غير مصرح له بالدخول إلى لوحة الإدارة.");
         return;
       }
+      primeAudio();
       setLoggedIn(true);
     } catch (error) {
       console.error(error);
@@ -111,6 +112,7 @@ export default function AdminPage() {
         email: registerForm.email,
         password: registerForm.password
       });
+      primeAudio();
       setLoggedIn(true);
       setIsRegisterMode(false);
       setRegisterForm({ fullName: "", email: "", password: "", developerCode: "" });

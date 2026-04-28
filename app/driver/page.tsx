@@ -14,6 +14,7 @@ import {
   updateOrderStatus
 } from "@/services/order-service";
 import { resetFactoryData } from "@/services/reset-service";
+import { notifyOrderArrival, primeAudio } from "@/services/notification-service";
 import { Order } from "@/types";
 
 export default function DriverPage() {
@@ -31,6 +32,7 @@ export default function DriverPage() {
   const [driverName, setDriverName] = useState("سائق التوصيل");
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isResettingFactory, setIsResettingFactory] = useState(false);
+  const [lastAvailableCount, setLastAvailableCount] = useState<number | null>(null);
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
@@ -49,6 +51,14 @@ export default function DriverPage() {
     };
   }, [loggedIn]);
 
+  useEffect(() => {
+    if (!loggedIn) return;
+    if (lastAvailableCount !== null && availableOrders.length > lastAvailableCount) {
+      notifyOrderArrival("طلب جديد متاح", "تمت إضافة طلب جديد للتوصيل.", 3);
+    }
+    setLastAvailableCount(availableOrders.length);
+  }, [availableOrders, loggedIn, lastAvailableCount]);
+
   const dailyEarnings = useMemo(() => {
     return deliveredOrders.reduce((sum, order) => sum + order.deliveryFee, 0);
   }, [deliveredOrders]);
@@ -58,6 +68,7 @@ export default function DriverPage() {
     try {
       await loginWithEmail(credentials.email, credentials.password);
       setDriverName(credentials.email.split("@")[0] || "سائق التوصيل");
+      primeAudio();
       setLoggedIn(true);
     } catch (error) {
       console.error(error);
@@ -70,6 +81,7 @@ export default function DriverPage() {
     try {
       await registerDriverAccount(registerForm);
       setDriverName(registerForm.fullName || registerForm.email.split("@")[0] || "سائق التوصيل");
+      primeAudio();
       setLoggedIn(true);
     } catch (error) {
       console.error(error);
