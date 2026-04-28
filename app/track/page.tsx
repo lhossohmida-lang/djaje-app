@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BackButton } from "@/components/shared/back-button";
 import { Header } from "@/components/shared/header";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -30,6 +31,9 @@ export default function TrackOrderPage() {
     <>
       <Header />
       <main className="page-shell section">
+        <div className="back-row">
+          <BackButton />
+        </div>
         <section className="card" style={{ padding: "2rem", maxWidth: 820, margin: "0 auto" }}>
           <h1>تتبع الطلب</h1>
           <p style={{ color: "var(--muted)" }}>أدخل رقم الطلب لمتابعة حالته لحظيًا.</p>

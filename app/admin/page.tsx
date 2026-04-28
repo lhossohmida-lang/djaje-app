@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { BackButton } from "@/components/shared/back-button";
 import { Header } from "@/components/shared/header";
 import { formatCurrency } from "@/lib/utils";
 import { sampleMenu } from "@/data/mock-data";
@@ -153,6 +154,9 @@ export default function AdminPage() {
     <>
       <Header />
       <main className="page-shell section">
+        <div className="back-row">
+          <BackButton />
+        </div>
         {!loggedIn ? (
           <section className="auth-card">
             <div className="auth-icon">{isRegisterMode ? "✨" : "🔐"}</div>

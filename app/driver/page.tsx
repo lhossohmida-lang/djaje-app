@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { BackButton } from "@/components/shared/back-button";
 import { Header } from "@/components/shared/header";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
 import { auth } from "@/lib/firebase";
@@ -103,6 +104,9 @@ export default function DriverPage() {
     <>
       <Header />
       <main className="page-shell section">
+        <div className="back-row">
+          <BackButton />
+        </div>
         {!loggedIn ? (
           <section className="card" style={{ padding: "2rem", maxWidth: 540, margin: "0 auto" }}>
             <h1>{isRegisterMode ? "إنشاء حساب سائق" : "تسجيل دخول السائق"}</h1>
