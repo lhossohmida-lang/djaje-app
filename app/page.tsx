@@ -325,40 +325,73 @@ export default function LandingPage() {
         }
         @media (max-width: 600px) {
           .install-cta {
-            font-size: .98rem;
-            padding: .95rem 1.1rem;
+            font-size: 1rem;
+            padding: 1rem 1.2rem;
+            border-radius: 16px;
           }
           .landing-shell {
-            gap: 1.2rem;
-            padding: .85rem .85rem 1.25rem;
-            border-radius: 28px;
+            gap: 1rem;
+            padding: .75rem .75rem 1.1rem;
+            border-radius: 24px;
           }
           .landing-back {
-            padding: .6rem .9rem;
-            font-size: .92rem;
+            padding: .55rem .85rem;
+            font-size: .88rem;
+            gap: .3rem;
+          }
+          .landing-back svg {
+            transform: scaleX(-1);
           }
           .roles-row {
-            gap: .7rem;
-            transform: translateY(14px);
+            gap: .8rem;
+            transform: translateY(10px);
+            justify-content: center;
           }
           .story-ring {
-            width: 112px;
-            height: 112px;
-            padding: 4px;
+            width: 130px;
+            height: 130px;
+            padding: 5px;
           }
           .story-core {
-            padding: .55rem;
-            gap: .22rem;
+            padding: .7rem .5rem;
+            gap: .28rem;
+          }
+          .story-icon {
+            width: 40px;
+            height: 40px;
+          }
+          .story-icon svg {
+            width: 22px;
+            height: 22px;
+          }
+          .role-label {
+            font-size: .9rem;
+            font-weight: 800;
+          }
+          .role-sub {
+            display: none;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .story-ring {
+            width: 108px;
+            height: 108px;
+            padding: 4px;
           }
           .story-icon {
             width: 34px;
             height: 34px;
           }
-          .role-label {
-            font-size: .82rem;
+          .story-icon svg {
+            width: 18px;
+            height: 18px;
           }
-          .role-sub {
-            display: none;
+          .role-label {
+            font-size: .8rem;
+          }
+          .roles-row {
+            gap: .55rem;
           }
         }
       `}</style>
@@ -374,7 +407,7 @@ export default function LandingPage() {
         <div className="landing-copy">
           <h1
             style={{
-              fontSize: "clamp(2.8rem, 7vw, 4.4rem)",
+              fontSize: "clamp(2.2rem, 8vw, 4.4rem)",
               fontWeight: 900,
               color: "var(--text)",
               margin: 0,

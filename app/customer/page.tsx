@@ -99,7 +99,7 @@ export default function CustomerPage() {
         ) : null}
 
         <section
-          className="section"
+          className="section customer-layout"
           style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1rem" }}
         >
           <div className="grid">
