@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { Header } from "@/components/shared/header";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
 import { auth } from "@/lib/firebase";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -121,7 +120,6 @@ export default function DriverPage() {
 
   return (
     <>
-      <Header />
       <main className="page-shell section">
         {!loggedIn ? (
           <section className="card" style={{ padding: "2rem", maxWidth: 540, margin: "0 auto" }}>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Header } from "@/components/shared/header";
 import { CartPanel } from "@/components/customer/cart-panel";
 import { MenuCard } from "@/components/customer/menu-card";
 import { useCart } from "@/contexts/cart-context";
@@ -67,7 +66,6 @@ export default function CustomerPage() {
 
   return (
     <>
-      <Header showRoleLinks={false} />
       <main className="page-shell section">
         <section
           className="card"

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Header } from "@/components/shared/header";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { getOrderByNumber } from "@/services/order-service";
@@ -28,7 +27,6 @@ export default function TrackOrderPage() {
 
   return (
     <>
-      <Header />
       <main className="page-shell section">
         <section className="card" style={{ padding: "2rem", maxWidth: 820, margin: "0 auto" }}>
           <h1>تتبع الطلب</h1>

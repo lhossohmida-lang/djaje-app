@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Header } from "@/components/shared/header";
 import { sampleMenu } from "@/data/mock-data";
 import { formatCurrency } from "@/lib/utils";
 import { loginWithEmail, logout, registerAdminAccount } from "@/services/auth-service";
@@ -173,7 +172,6 @@ export default function AdminPage() {
 
   return (
     <>
-      <Header />
       <main className="page-shell section">
         {!loggedIn ? (
           <section className="auth-card">
