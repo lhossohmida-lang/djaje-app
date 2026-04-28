@@ -10,7 +10,15 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(git ls-remote *)",
-      "Bash(echo \"EXIT=$?\")"
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(vercel --version)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(npx --yes vercel@latest whoami)",
+      "Bash(npx --yes vercel@latest --prod --yes)",
+      "Bash(npx tsc *)",
+      "Bash(git reset *)",
+      "Bash(npx next *)"
     ]
   }
 }

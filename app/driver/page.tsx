@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { onAuthStateChanged } from "firebase/auth";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
 import { auth } from "@/lib/firebase";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -15,6 +16,7 @@ import {
 } from "@/services/order-service";
 import { resetFactoryData } from "@/services/reset-service";
 import { notifyOrderArrival, primeAudio } from "@/services/notification-service";
+import { getUserRoleByUid } from "@/services/user-service";
 import { Order } from "@/types";
 
 export default function DriverPage() {
@@ -29,27 +31,51 @@ export default function DriverPage() {
     password: ""
   });
   const [loggedIn, setLoggedIn] = useState(false);
+  const [driverUid, setDriverUid] = useState<string | null>(null);
   const [driverName, setDriverName] = useState("سائق التوصيل");
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [isResettingFactory, setIsResettingFactory] = useState(false);
   const [lastAvailableCount, setLastAvailableCount] = useState<number | null>(null);
 
   useEffect(() => {
-    const uid = auth.currentUser?.uid;
-    if (!loggedIn || !uid) {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setDriverUid(null);
+        setLoggedIn(false);
+        return;
+      }
+      try {
+        const role = await getUserRoleByUid(user.uid);
+        if (role !== "driver") {
+          setDriverUid(null);
+          setLoggedIn(false);
+          return;
+        }
+        setDriverUid(user.uid);
+        setDriverName(user.displayName || user.email?.split("@")[0] || "سائق التوصيل");
+        setLoggedIn(true);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!loggedIn || !driverUid) {
       return;
     }
 
     const unsubscribeAvailable = subscribeToAvailableOrders(setAvailableOrders);
-    const unsubscribeMine = subscribeToDriverOrders(uid, setMyOrders);
-    const unsubscribeDelivered = subscribeToDriverDelivered(uid, setDeliveredOrders);
+    const unsubscribeMine = subscribeToDriverOrders(driverUid, setMyOrders);
+    const unsubscribeDelivered = subscribeToDriverDelivered(driverUid, setDeliveredOrders);
 
     return () => {
       unsubscribeAvailable();
       unsubscribeMine();
       unsubscribeDelivered();
     };
-  }, [loggedIn]);
+  }, [loggedIn, driverUid]);
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -66,13 +92,17 @@ export default function DriverPage() {
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
-      await loginWithEmail(credentials.email, credentials.password);
-      setDriverName(credentials.email.split("@")[0] || "سائق التوصيل");
+      const credential = await loginWithEmail(credentials.email, credentials.password);
+      const role = await getUserRoleByUid(credential.user.uid);
+      if (role !== "driver") {
+        await logout();
+        window.alert("هذا الحساب غير مصرح له بالدخول إلى لوحة السائق.");
+        return;
+      }
       primeAudio();
-      setLoggedIn(true);
     } catch (error) {
       console.error(error);
-      window.alert("فعّل Firebase Authentication وأضف حساب السائق ثم أعد المحاولة.");
+      window.alert("تعذر تسجيل الدخول. تأكد من البيانات وأن الحساب مسجّل كسائق.");
     }
   }
 
@@ -80,9 +110,7 @@ export default function DriverPage() {
     event.preventDefault();
     try {
       await registerDriverAccount(registerForm);
-      setDriverName(registerForm.fullName || registerForm.email.split("@")[0] || "سائق التوصيل");
       primeAudio();
-      setLoggedIn(true);
     } catch (error) {
       console.error(error);
       window.alert("تعذر إنشاء حساب السائق. تأكد من تفعيل Email/Password في Firebase.");
@@ -99,13 +127,12 @@ export default function DriverPage() {
   }
 
   async function handleAcceptOrder(orderId: string) {
-    const uid = auth.currentUser?.uid;
-    if (!uid) {
+    if (!driverUid) {
       return;
     }
 
     try {
-      await assignOrderToDriver(orderId, uid, driverName);
+      await assignOrderToDriver(orderId, driverUid, driverName);
     } catch (error) {
       console.error(error);
       window.alert("تعذر قبول الطلب.");
@@ -215,9 +242,8 @@ export default function DriverPage() {
                 </button>
                 <button
                   className="button button-secondary"
-                  onClick={async () => {
-                    await logout();
-                    setLoggedIn(false);
+                  onClick={() => {
+                    void logout();
                   }}
                 >
                   تسجيل الخروج
@@ -227,7 +253,17 @@ export default function DriverPage() {
 
             <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
               <div className="card" style={{ padding: "1rem" }}>
-                <h2>الطلبات الخاصة بي</h2>
+                <h2 style={{ display: "flex", alignItems: "center", gap: ".55rem" }}>
+                  الطلبات الخاصة بي
+                  <span className="badge" style={{ background: "rgba(20,83,45,.12)", color: "var(--success)" }}>
+                    {myOrders.length}
+                  </span>
+                </h2>
+                {myOrders.length === 0 ? (
+                  <p style={{ color: "var(--muted)", fontSize: ".9rem", margin: ".5rem 0 0" }}>
+                    لم تقبل أي طلب بعد. اختر طلباً من القسم المجاور.
+                  </p>
+                ) : null}
                 <div className="grid">
                   {myOrders.map((order) => (
                     <article key={order.id} className="card" style={{ padding: "1rem" }}>
@@ -270,7 +306,17 @@ export default function DriverPage() {
               </div>
 
               <div className="card" style={{ padding: "1rem" }}>
-                <h2>طلبات متاحة</h2>
+                <h2 style={{ display: "flex", alignItems: "center", gap: ".55rem" }}>
+                  طلبات متاحة
+                  <span className="badge" style={{ background: "rgba(194,65,12,.14)", color: "var(--primary-dark)" }}>
+                    {availableOrders.length}
+                  </span>
+                </h2>
+                {availableOrders.length === 0 ? (
+                  <p style={{ color: "var(--muted)", fontSize: ".9rem", margin: ".5rem 0 0" }}>
+                    لا توجد طلبات متاحة الآن. سيظهر الطلب فور وصوله مع تنبيه صوتي 🔔
+                  </p>
+                ) : null}
                 <div className="grid">
                   {availableOrders.map((order) => (
                     <article key={order.id} className="card" style={{ padding: "1rem" }}>
