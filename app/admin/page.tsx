@@ -143,9 +143,11 @@ export default function AdminPage() {
       setMenuForm((current) => ({ ...current, imageUrl }));
     } catch (error) {
       console.error(error);
-      window.alert("فشل رفع الصورة.");
+      const message = error instanceof Error ? error.message : "فشل رفع الصورة.";
+      window.alert(message);
     } finally {
       setUploading(false);
+      event.target.value = "";
     }
   }
 
