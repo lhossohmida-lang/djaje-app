@@ -1,10 +1,19 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@/app/globals.css";
 import { AppProviders } from "@/components/providers/app-providers";
 
 export const metadata: Metadata = {
   title: "Djaje Restaurant System",
-  description: "Restaurant ordering and delivery system powered by Firebase."
+  description: "Restaurant ordering and delivery system powered by Firebase.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg"
+  }
+};
+
+export const viewport: Viewport = {
+  themeColor: "#c2410c"
 };
 
 const criticalGlobalStyles = `
