@@ -5,3 +5,8 @@ dist
 coverage
 *.log
 firebase-debug.log
+.firebase/
+.firebase-config/
+.npm-cache/
+.claude/
+serviceAccountKey.json.json

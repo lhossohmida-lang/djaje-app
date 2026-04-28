@@ -12,32 +12,31 @@ export function MenuCard({
   onAdd: (item: MenuItem) => void;
 }) {
   return (
-    <article className="card" style={{ overflow: "hidden" }}>
+    <article className="menu-card">
       <div
+        className="menu-card-image"
         style={{
-          height: 210,
-          backgroundImage: `linear-gradient(rgba(36,23,15,.12), rgba(36,23,15,.12)), url(${item.imageUrl})`,
-          backgroundPosition: "center",
-          backgroundSize: "cover"
+          backgroundImage: `linear-gradient(rgba(36,23,15,.12), rgba(36,23,15,.12)), url(${item.imageUrl})`
         }}
-      />
-      <div style={{ padding: "1rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: ".75rem" }}>
-          <div>
-            <h3 style={{ margin: 0 }}>{item.name}</h3>
-            <p style={{ color: "var(--muted)", lineHeight: 1.7 }}>{item.description}</p>
+      >
+        {item.category && <span className="menu-card-category">{item.category}</span>}
+      </div>
+      <div className="menu-card-body">
+        <h3 className="menu-card-title">{item.name}</h3>
+        <p className="menu-card-desc">{item.description}</p>
+        <div className="menu-card-footer">
+          <div className="menu-card-meta">
+            <strong className="menu-card-price">{formatCurrency(item.price)}</strong>
+            <span className="menu-card-time">
+              <Clock3 size={12} />
+              {item.prepTime} د
+            </span>
           </div>
-          <span className="badge">{item.category}</span>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: ".75rem" }}>
-          <div>
-            <strong>{formatCurrency(item.price)}</strong>
-            <div className="badge" style={{ marginTop: ".5rem" }}>
-              <Clock3 size={14} />
-              {item.prepTime} دقيقة
-            </div>
-          </div>
-          <button className="button button-primary" onClick={() => onAdd(item)}>
+          <button
+            className="button button-primary menu-card-add"
+            onClick={() => onAdd(item)}
+            aria-label="إضافة إلى السلة"
+          >
             <Plus size={18} />
           </button>
         </div>

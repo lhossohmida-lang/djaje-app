@@ -26,6 +26,23 @@ export async function registerDriverAccount(payload: {
   return credential;
 }
 
+export async function registerAdminAccount(payload: {
+  email: string;
+  password: string;
+  fullName: string;
+}) {
+  const credential = await createUserWithEmailAndPassword(auth, payload.email, payload.password);
+
+  await setDoc(doc(db, "users", credential.user.uid), {
+    uid: credential.user.uid,
+    fullName: payload.fullName,
+    email: payload.email,
+    role: "admin"
+  });
+
+  return credential;
+}
+
 export async function logout() {
   return signOut(auth);
 }

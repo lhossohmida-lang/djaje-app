@@ -3,9 +3,12 @@
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { formatCurrency } from "@/lib/utils";
+import { DELIVERY_FEE } from "@/services/order-service";
 
 export function CartPanel() {
   const { items, subtotal, addToCart, decreaseQuantity, removeFromCart } = useCart();
+  const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
+  const total = subtotal + deliveryFee;
 
   return (
     <aside className="card" style={{ padding: "1rem", position: "sticky", top: "1rem" }}>
@@ -54,9 +57,27 @@ export function CartPanel() {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-between" }}>
-            <strong>المجموع</strong>
-            <strong>{formatCurrency(subtotal)}</strong>
+          <div style={{ marginTop: "1rem", display: "grid", gap: ".4rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", color: "var(--muted)" }}>
+              <span>المجموع الفرعي</span>
+              <span>{formatCurrency(subtotal)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", color: "var(--muted)" }}>
+              <span>رسوم التوصيل</span>
+              <span>{formatCurrency(deliveryFee)}</span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                paddingTop: ".5rem",
+                borderTop: "1px dashed var(--border)",
+                fontSize: "1.05rem"
+              }}
+            >
+              <strong>الإجمالي</strong>
+              <strong style={{ color: "var(--primary-dark)" }}>{formatCurrency(total)}</strong>
+            </div>
           </div>
         </>
       )}

@@ -10,6 +10,7 @@ import { loginWithEmail, logout, registerDriverAccount } from "@/services/auth-s
 import {
   assignOrderToDriver,
   subscribeToAvailableOrders,
+  subscribeToDriverDelivered,
   subscribeToDriverOrders,
   updateOrderStatus
 } from "@/services/order-service";
@@ -18,6 +19,7 @@ import { Order } from "@/types";
 export default function DriverPage() {
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
+  const [deliveredOrders, setDeliveredOrders] = useState<Order[]>([]);
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = useState({
     fullName: "",
@@ -37,18 +39,18 @@ export default function DriverPage() {
 
     const unsubscribeAvailable = subscribeToAvailableOrders(setAvailableOrders);
     const unsubscribeMine = subscribeToDriverOrders(uid, setMyOrders);
+    const unsubscribeDelivered = subscribeToDriverDelivered(uid, setDeliveredOrders);
 
     return () => {
       unsubscribeAvailable();
       unsubscribeMine();
+      unsubscribeDelivered();
     };
   }, [loggedIn]);
 
   const dailyEarnings = useMemo(() => {
-    return myOrders
-      .filter((order) => order.status === "delivered")
-      .reduce((sum, order) => sum + order.deliveryFee, 0);
-  }, [myOrders]);
+    return deliveredOrders.reduce((sum, order) => sum + order.deliveryFee, 0);
+  }, [deliveredOrders]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

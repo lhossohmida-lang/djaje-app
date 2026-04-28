@@ -143,7 +143,7 @@ export default function HomePage() {
                 onChange={(event) => setKeyword(event.target.value)}
               />
             </div>
-            <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+            <div className="menu-grid">
               {filteredMenu.map((item) => (
                 <MenuCard key={item.id} item={item} onAdd={addToCart} />
               ))}
@@ -171,11 +171,13 @@ export default function HomePage() {
                 />
                 <textarea
                   className="textarea"
-                  placeholder="العنوان الكامل"
+                  placeholder="العنوان الكامل (الحي، الشارع، رقم البناية، الطابق، علامة مميزة...)"
                   required
                   rows={4}
                   value={customer.address}
-                  onChange={(event) => setCustomer((current) => ({ ...current, address: event.target.value }))}
+                  onChange={(event) =>
+                    setCustomer((current) => ({ ...current, address: event.target.value }))
+                  }
                 />
                 <textarea
                   className="textarea"

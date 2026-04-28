@@ -17,6 +17,8 @@ import { CartItem, CustomerInfo, DashboardStats, Order, OrderStatus } from "@/ty
 
 const ordersCollection = collection(db, "orders");
 
+export const DELIVERY_FEE = 100;
+
 function normalizeOrder(id: string, data: Record<string, unknown>): Order {
   const created = data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : String(data.createdAt);
   const updated = data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : String(data.updatedAt);
@@ -43,7 +45,7 @@ export async function createOrder(payload: {
   deliveryFee?: number;
 }) {
   const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryFee = payload.deliveryFee ?? 150;
+  const deliveryFee = payload.deliveryFee ?? DELIVERY_FEE;
   const orderNumber = generateOrderNumber();
 
   const orderData = {
@@ -75,17 +77,32 @@ export function subscribeToOrders(callback: (orders: Order[]) => void) {
 
 export function subscribeToAvailableOrders(callback: (orders: Order[]) => void) {
   return onSnapshot(
-    query(ordersCollection, where("status", "in", ["confirmed", "assigned", "picked_up", "out_for_delivery"])),
+    query(ordersCollection, where("status", "in", ["pending", "confirmed"])),
     (snapshot) => {
-      callback(snapshot.docs.map((entry) => normalizeOrder(entry.id, entry.data())));
+      const orders = snapshot.docs
+        .map((entry) => normalizeOrder(entry.id, entry.data()))
+        .filter((order) => !order.driverId);
+      callback(orders);
     }
   );
 }
 
 export function subscribeToDriverOrders(driverId: string, callback: (orders: Order[]) => void) {
   return onSnapshot(query(ordersCollection, where("driverId", "==", driverId)), (snapshot) => {
-    callback(snapshot.docs.map((entry) => normalizeOrder(entry.id, entry.data())));
+    const orders = snapshot.docs
+      .map((entry) => normalizeOrder(entry.id, entry.data()))
+      .filter((order) => order.status !== "delivered");
+    callback(orders);
   });
+}
+
+export function subscribeToDriverDelivered(driverId: string, callback: (orders: Order[]) => void) {
+  return onSnapshot(
+    query(ordersCollection, where("driverId", "==", driverId), where("status", "==", "delivered")),
+    (snapshot) => {
+      callback(snapshot.docs.map((entry) => normalizeOrder(entry.id, entry.data())));
+    }
+  );
 }
 
 export async function assignOrderToDriver(orderId: string, driverId: string, driverName: string) {
