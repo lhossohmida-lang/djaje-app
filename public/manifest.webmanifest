@@ -1,0 +1,21 @@
+{
+  "name": "Djaje",
+  "short_name": "Djaje",
+  "description": "نظام طلبات وتوصيل لمطعم جاجي",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff7ee",
+  "theme_color": "#c2410c",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
