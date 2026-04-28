@@ -91,29 +91,7 @@ export default function HomePage() {
               منفصلة للسائق والإدارة.
             </p>
           </div>
-          <div
-            className="card"
-            style={{
-              padding: "1.25rem",
-              background: "linear-gradient(160deg, rgba(194,65,12,.95), rgba(20,83,45,.95))",
-              color: "white"
-            }}
-          >
-            <div className="grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
-              <div>
-                <strong style={{ fontSize: "2rem" }}>{menu.length}</strong>
-                <div>أطباق</div>
-              </div>
-              <div>
-                <strong style={{ fontSize: "2rem" }}>{itemCount}</strong>
-                <div>في السلة</div>
-              </div>
-              <div>
-                <strong style={{ fontSize: "2rem" }}>24/7</strong>
-                <div>تتبع الطلب</div>
-              </div>
-            </div>
-          </div>
+
         </section>
 
         {createdOrder ? (
