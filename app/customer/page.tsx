@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BackButton } from "@/components/shared/back-button";
-import { Header } from "@/components/shared/header";
 import { CartPanel } from "@/components/customer/cart-panel";
 import { MenuCard } from "@/components/customer/menu-card";
 import { useCart } from "@/contexts/cart-context";
@@ -68,7 +67,6 @@ export default function CustomerPage() {
 
   return (
     <>
-      <Header />
       <main className="page-shell section">
         <div className="back-row">
           <BackButton />
