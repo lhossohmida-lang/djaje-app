@@ -72,6 +72,30 @@ img {
   gap: 1rem;
 }
 
+.page-back-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 0.9rem;
+}
+
+.page-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(36, 23, 15, 0.08);
+  color: var(--text);
+  box-shadow: 0 10px 24px rgba(36, 23, 15, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.page-back-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(36, 23, 15, 0.1);
+}
+
 .button {
   border: none;
   border-radius: 999px;
@@ -458,6 +482,16 @@ img {
   .button {
     padding: 0.7rem 1rem;
     font-size: 0.9rem;
+  }
+
+  .page-back-row {
+    margin-bottom: 0.7rem;
+  }
+
+  .page-back-link {
+    padding: 0.55rem 0.85rem;
+    font-size: 0.88rem;
+    gap: 0.3rem;
   }
 
   .input,

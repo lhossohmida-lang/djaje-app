@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-import { ArrowRight, Download, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
+import { Download, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -148,27 +148,6 @@ export default function LandingPage() {
           background: rgba(194, 65, 12, 0.08);
           filter: blur(10px);
           z-index: -1;
-        }
-        .landing-topbar {
-          display: flex;
-          justify-content: flex-start;
-        }
-        .landing-back {
-          border: none;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.78);
-          color: var(--text);
-          display: inline-flex;
-          align-items: center;
-          gap: .45rem;
-          padding: .7rem 1rem;
-          cursor: pointer;
-          box-shadow: 0 10px 24px rgba(36, 23, 15, 0.08);
-          transition: transform .2s ease, box-shadow .2s ease;
-        }
-        .landing-back:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 14px 28px rgba(36, 23, 15, 0.1);
         }
         .landing-copy {
           text-align: center;
@@ -334,23 +313,23 @@ export default function LandingPage() {
             padding: .75rem .75rem 1.1rem;
             border-radius: 24px;
           }
-          .landing-back {
-            padding: .55rem .85rem;
-            font-size: .88rem;
-            gap: .3rem;
-          }
-          .landing-back svg {
-            transform: scaleX(-1);
-          }
           .roles-row {
-            gap: .8rem;
-            transform: translateY(10px);
-            justify-content: center;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .65rem;
+            transform: none;
+            justify-content: stretch;
+            align-items: stretch;
           }
           .story-ring {
-            width: 130px;
-            height: 130px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1;
             padding: 5px;
+          }
+          .role-link {
+            width: 100%;
+            min-width: 0;
           }
           .story-core {
             padding: .7rem .5rem;
@@ -375,8 +354,8 @@ export default function LandingPage() {
 
         @media (max-width: 380px) {
           .story-ring {
-            width: 108px;
-            height: 108px;
+            width: 100%;
+            height: auto;
             padding: 4px;
           }
           .story-icon {
@@ -391,19 +370,12 @@ export default function LandingPage() {
             font-size: .8rem;
           }
           .roles-row {
-            gap: .55rem;
+            gap: .45rem;
           }
         }
       `}</style>
 
       <section className="landing-shell">
-        <div className="landing-topbar">
-          <button className="landing-back" type="button" onClick={() => window.history.back()}>
-            <ArrowRight size={18} />
-            رجوع
-          </button>
-        </div>
-
         <div className="landing-copy">
           <h1
             style={{

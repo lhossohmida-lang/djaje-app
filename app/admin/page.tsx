@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { sampleMenu } from "@/data/mock-data";
+import { PageBackLink } from "@/components/shared/page-back-link";
 import { formatCurrency } from "@/lib/utils";
 import { loginWithEmail, logout, registerAdminAccount } from "@/services/auth-service";
 import { createOrUpdateMenuItem, deleteMenuItem, subscribeToMenu } from "@/services/menu-service";
@@ -175,6 +176,7 @@ export default function AdminPage() {
   return (
     <>
       <main className="page-shell section">
+        <PageBackLink />
         {!loggedIn ? (
           <section className="auth-card">
             <div className="auth-icon">{isRegisterMode ? "✨" : "🔐"}</div>

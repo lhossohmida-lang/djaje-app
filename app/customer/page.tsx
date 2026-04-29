@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, Sparkles } from "lucide-react";
 import { CartPanel } from "@/components/customer/cart-panel";
 import { MenuCard } from "@/components/customer/menu-card";
+import { PageBackLink } from "@/components/shared/page-back-link";
 import { useCart } from "@/contexts/cart-context";
 import { sampleMenu } from "@/data/mock-data";
 import { notify } from "@/services/notification-service";
@@ -68,6 +69,7 @@ export default function CustomerPage() {
   return (
     <>
       <main className="page-shell section">
+        <PageBackLink />
         <section className="customer-hero">
           <div className="customer-hero-orb customer-hero-orb-a" aria-hidden="true" />
           <div className="customer-hero-orb customer-hero-orb-b" aria-hidden="true" />

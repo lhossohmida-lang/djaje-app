@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { onAuthStateChanged } from "firebase/auth";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
+import { PageBackLink } from "@/components/shared/page-back-link";
 import { auth } from "@/lib/firebase";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { loginWithEmail, logout, registerDriverAccount } from "@/services/auth-service";
@@ -160,6 +161,7 @@ export default function DriverPage() {
   return (
     <>
       <main className="page-shell section">
+        <PageBackLink />
         {!loggedIn ? (
           <section className="card" style={{ padding: "2rem", maxWidth: 540, margin: "0 auto" }}>
             <h1>{isRegisterMode ? "إنشاء حساب سائق" : "تسجيل دخول السائق"}</h1>

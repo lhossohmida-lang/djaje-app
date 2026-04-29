@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
+import { PageBackLink } from "@/components/shared/page-back-link";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { getOrderByNumber } from "@/services/order-service";
 import { Order } from "@/types";
@@ -28,6 +29,7 @@ export default function TrackOrderPage() {
   return (
     <>
       <main className="page-shell section">
+        <PageBackLink />
         <section className="card" style={{ padding: "2rem", maxWidth: 820, margin: "0 auto" }}>
           <h1>تتبع الطلب</h1>
           <p style={{ color: "var(--muted)" }}>أدخل رقم الطلب لمتابعة حالته لحظيًا.</p>
