@@ -9,6 +9,7 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  deleteDoc,
   where
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -141,4 +142,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     activeOrders: orders.filter((order) => order.status !== "delivered").length,
     availableDrivers: new Set(orders.filter((order) => order.driverId).map((order) => order.driverId)).size
   };
+}
+
+export async function deleteOrder(orderId: string) {
+  await deleteDoc(doc(db, "orders", orderId));
 }

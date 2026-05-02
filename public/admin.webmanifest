@@ -1,8 +1,8 @@
 {
-  "name": "Djaje",
-  "short_name": "Djaje",
-  "description": "نظام طلبات وتوصيل لمطعم جاجي",
-  "start_url": "/",
+  "name": "Djaje Admin",
+  "short_name": "Djaje Admin",
+  "description": "لوحة إدارة مطعم جاجي",
+  "start_url": "/admin",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

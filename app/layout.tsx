@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import "@/app/globals.css";
 import { AppProviders } from "@/components/providers/app-providers";
+import { ServiceWorkerRegister } from "@/components/shared/service-worker-register";
 
 export const metadata: Metadata = {
   title: "Djaje Restaurant System",
   description: "Restaurant ordering and delivery system powered by Firebase.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg"
+    icon: "/icon-192x192.png",
+    apple: "/icon-192x192.png"
   }
 };
 
@@ -43,10 +44,12 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, rgba(194, 65, 12, 0.14), transparent 28%),
-    radial-gradient(circle at bottom left, rgba(20, 83, 45, 0.12), transparent 24%),
-    var(--background);
+  background-image: url('/background.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  background-color: var(--background);
   color: var(--text);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -163,6 +166,7 @@ export default function RootLayout({
         <style dangerouslySetInnerHTML={{ __html: criticalGlobalStyles }} />
       </head>
       <body>
+        <ServiceWorkerRegister />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

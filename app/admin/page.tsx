@@ -7,10 +7,12 @@ import { sampleMenu } from "@/data/mock-data";
 import { loginWithEmail, logout, registerAdminAccount } from "@/services/auth-service";
 import { createOrUpdateMenuItem, deleteMenuItem, subscribeToMenu } from "@/services/menu-service";
 import { notify } from "@/services/notification-service";
-import { assignOrderToDriver, getDashboardStats, subscribeToOrders, updateOrderStatus } from "@/services/order-service";
+import { assignOrderToDriver, deleteOrder, getDashboardStats, subscribeToOrders, updateOrderStatus } from "@/services/order-service";
 import { uploadDishImage } from "@/services/storage-service";
 import { getUserRoleByUid } from "@/services/user-service";
 import { DashboardStats, MenuItem, Order, OrderStatus } from "@/types";
+import { useRingtone } from "@/hooks/use-ringtone";
+import { InstallAppButton } from "@/components/shared/install-app-button";
 
 const emptyMenuForm: MenuItem = {
   id: "",
@@ -82,6 +84,9 @@ export default function AdminPage() {
     () => orders.filter((o) => o.status !== "delivered"),
     [orders]
   );
+
+  const hasPendingOrder = useMemo(() => orders.some((o) => o.status === "pending"), [orders]);
+  useRingtone(loggedIn && hasPendingOrder);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -235,15 +240,18 @@ export default function AdminPage() {
                 <h1>لوحة الإدارة</h1>
                 <p>إدارة الطلبات والمنيو ورفع الصور وتعيين السائقين.</p>
               </div>
-              <button
-                className="button button-secondary"
-                onClick={async () => {
-                  await logout();
-                  setLoggedIn(false);
-                }}
-              >
-                تسجيل الخروج
-              </button>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <InstallAppButton />
+                <button
+                  className="button button-secondary"
+                  onClick={async () => {
+                    await logout();
+                    setLoggedIn(false);
+                  }}
+                >
+                  تسجيل الخروج
+                </button>
+              </div>
             </div>
 
             <div className="admin-tabs">
@@ -316,24 +324,45 @@ export default function AdminPage() {
                         <p className="customer-name">{order.customer.name}</p>
                         <p className="customer-address">{order.customer.address}</p>
                         <div className="actions">
-                          <button
-                            className="button button-secondary"
-                            onClick={() => updateOrderStatus(order.id, "confirmed")}
-                          >
-                            قيد التحضير
-                          </button>
-                          <button
-                            className="button button-secondary"
-                            onClick={() => assignOrderToDriver(order.id, "demo-driver", "سائق تجريبي")}
-                          >
-                            تعيين للسائق
-                          </button>
-                          <button
-                            className="button button-primary"
-                            onClick={() => updateOrderStatus(order.id, "delivered")}
-                          >
-                            إنهاء
-                          </button>
+                          {order.status !== "delivered" ? (
+                            <>
+                              <button
+                                className="button button-secondary"
+                                onClick={() => updateOrderStatus(order.id, "confirmed")}
+                              >
+                                قيد التحضير
+                              </button>
+                              <button
+                                className="button button-secondary"
+                                onClick={() => assignOrderToDriver(order.id, "demo-driver", "سائق تجريبي")}
+                              >
+                                تعيين للسائق
+                              </button>
+                              <button
+                                className="button button-primary"
+                                onClick={() => updateOrderStatus(order.id, "delivered")}
+                              >
+                                إنهاء
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              className="button button-danger"
+                              onClick={async () => {
+                                if (window.confirm("هل أنت متأكد من حذف هذا الطلب نهائياً؟")) {
+                                  try {
+                                    await deleteOrder(order.id);
+                                  } catch (error) {
+                                    console.error(error);
+                                    window.alert("تعذر حذف الطلب.");
+                                  }
+                                }
+                              }}
+                              style={{ width: "100%", display: "flex", justifyContent: "center", gap: "0.5rem", alignItems: "center" }}
+                            >
+                              <span>حذف الطلب ❌</span>
+                            </button>
+                          )}
                         </div>
                       </article>
                     ))}

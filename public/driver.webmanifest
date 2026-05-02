@@ -1,8 +1,8 @@
 {
-  "name": "Djaje",
-  "short_name": "Djaje",
-  "description": "نظام طلبات وتوصيل لمطعم جاجي",
-  "start_url": "/",
+  "name": "Djaje Driver",
+  "short_name": "Djaje Driver",
+  "description": "لوحة سائق مطعم جاجي",
+  "start_url": "/driver",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

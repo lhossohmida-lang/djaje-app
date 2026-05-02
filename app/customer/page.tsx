@@ -1,15 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BackButton } from "@/components/shared/back-button";
-import { CartPanel } from "@/components/customer/cart-panel";
-import { MenuCard } from "@/components/customer/menu-card";
+import Image from "next/image";
+import { Search, ShoppingBag, Heart, Plus, Minus, Trash2, X, ChevronLeft } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { sampleMenu } from "@/data/mock-data";
 import { notify } from "@/services/notification-service";
 import { createOrder } from "@/services/order-service";
 import { subscribeToMenu } from "@/services/menu-service";
 import { CustomerInfo, MenuItem } from "@/types";
+import { formatCurrency } from "@/lib/utils";
+import { FloatingActions } from "@/components/shared/floating-actions";
+import { SplashScreen } from "@/components/shared/splash-screen";
+import { DELIVERY_FEE } from "@/services/order-service";
 
 const initialCustomer: CustomerInfo = {
   name: "",
@@ -19,30 +22,57 @@ const initialCustomer: CustomerInfo = {
 };
 
 export default function CustomerPage() {
-  const { items, addToCart, clearCart } = useCart();
+  const { items, addToCart, subtotal, clearCart, decreaseQuantity, removeFromCart } = useCart();
   const [menu, setMenu] = useState<MenuItem[]>(sampleMenu);
   const [keyword, setKeyword] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("الكل");
   const [customer, setCustomer] = useState<CustomerInfo>(initialCustomer);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdOrder, setCreatedOrder] = useState<{ id: string; orderNumber: string } | null>(null);
+  const [showCart, setShowCart] = useState(false);
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     const unsubscribe = subscribeToMenu(setMenu);
     return () => unsubscribe();
   }, []);
 
+  const categories = useMemo(() => {
+    const cats = new Set(menu.map((item) => item.category));
+    return ["الكل", ...Array.from(cats)];
+  }, [menu]);
+
   const filteredMenu = useMemo(() => {
-    if (!keyword.trim()) {
-      return menu;
+    let filtered = menu;
+    if (activeCategory !== "الكل") {
+      filtered = filtered.filter((item) => item.category === activeCategory);
     }
-    const normalized = keyword.trim().toLowerCase();
-    return menu.filter(
-      (item) =>
-        item.name.toLowerCase().includes(normalized) ||
-        item.description.toLowerCase().includes(normalized) ||
-        item.category.toLowerCase().includes(normalized)
-    );
-  }, [menu, keyword]);
+    if (keyword.trim()) {
+      const normalized = keyword.trim().toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.name.toLowerCase().includes(normalized) ||
+          item.description.toLowerCase().includes(normalized) ||
+          item.category.toLowerCase().includes(normalized)
+      );
+    }
+    return filtered;
+  }, [menu, keyword, activeCategory]);
+
+  function toggleFavorite(id: string) {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const deliveryFee = items.length > 0 ? DELIVERY_FEE : 0;
+  const total = subtotal + deliveryFee;
 
   async function handleOrderSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,6 +87,8 @@ export default function CustomerPage() {
       await notify("تم تسجيل الطلب", `رقم الطلب الخاص بك هو ${order.orderNumber}`);
       clearCart();
       setCustomer(initialCustomer);
+      setShowCart(false);
+      setShowOrderForm(false);
     } catch (error) {
       console.error(error);
       window.alert("تعذر حفظ الطلب الآن. تأكد من ربط Firebase ثم أعد المحاولة.");
@@ -66,111 +98,255 @@ export default function CustomerPage() {
   }
 
   return (
-    <>
-      <main className="page-shell section">
-        <div className="back-row">
-          <BackButton />
+    <div className="market-app">
+      {/* ===== SPLASH SCREEN ===== */}
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+
+      {/* ===== HEADER ===== */}
+      <header className="market-header">
+        <button
+          className="market-header-icon"
+          onClick={() => setShowSearch(!showSearch)}
+          aria-label="بحث"
+        >
+          <Search size={22} />
+        </button>
+
+        <div className="market-logo">
+          <Image src="/icon-192x192.png" alt="Djaje" width={44} height={44} style={{ borderRadius: "12px" }} />
+          <span className="market-logo-text">DJAJE</span>
         </div>
-        <section
-          className="card"
-          style={{
-            padding: "2rem",
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "1.5rem",
-            alignItems: "center"
-          }}
+
+        <button
+          className="market-header-icon market-cart-icon"
+          onClick={() => setShowCart(true)}
+          aria-label="السلة"
         >
-          <div>
-            <span className="badge">منيو مباشر + طلب بدون تسجيل</span>
-            <h1 style={{ fontSize: "clamp(2rem, 5vw, 4rem)", marginBottom: ".75rem" }}>
-              نظام طلبات وتوصيل جاهز لمطعمك
-            </h1>
-            <p style={{ color: "var(--muted)", lineHeight: 1.9 }}>
-              الواجهة مهيأة للزبون بدون تسجيل دخول، مع تحديثات لحظية للطلبات، وتتبع مباشر برقم الطلب، ولوحات
-              منفصلة للسائق والإدارة.
-            </p>
-          </div>
-        </section>
+          <ShoppingBag size={22} />
+          {items.length > 0 && (
+            <span className="market-cart-count">{items.reduce((sum, i) => sum + i.quantity, 0)}</span>
+          )}
+        </button>
+      </header>
 
-        {createdOrder ? (
-          <section className="section">
-            <div className="card" style={{ padding: "1.25rem" }}>
-              <h2 style={{ marginTop: 0 }}>تم إنشاء الطلب بنجاح</h2>
-              <p>
-                رقم الطلب: <strong>{createdOrder.orderNumber}</strong>
-              </p>
-              <p style={{ color: "var(--muted)" }}>
-                احتفظ برقم الطلب لاستخدامه في صفحة التتبع. الدفع سيكون عند الاستلام.
-              </p>
-            </div>
-          </section>
-        ) : null}
+      {/* ===== SEARCH BAR (expandable) ===== */}
+      {showSearch && (
+        <div className="market-search-bar">
+          <Search size={18} className="market-search-icon" />
+          <input
+            className="market-search-input"
+            placeholder="ابحث عن طبق أو تصنيف..."
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            autoFocus
+          />
+          <button className="market-search-close" onClick={() => { setShowSearch(false); setKeyword(""); }}>
+            <X size={18} />
+          </button>
+        </div>
+      )}
 
-        <section
-          className="section"
-          style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1rem" }}
-        >
-          <div className="grid">
-            <div className="card" style={{ padding: "1rem" }}>
-              <input
-                className="input"
-                placeholder="ابحث عن طبق أو تصنيف..."
-                value={keyword}
-                onChange={(event) => setKeyword(event.target.value)}
-              />
-            </div>
-            <div className="menu-grid">
-              {filteredMenu.map((item) => (
-                <MenuCard key={item.id} item={item} onAdd={addToCart} />
-              ))}
-            </div>
-          </div>
+      {/* ===== HERO BANNER ===== */}
+      <section className="market-hero">
+        <div className="market-hero-overlay" />
+        <div className="market-hero-content">
+          <h1 className="market-hero-title">
+            وجبات
+            <br />
+            طازجة يومياً
+          </h1>
+        </div>
+      </section>
 
-          <div className="grid" style={{ alignContent: "start" }}>
-            <CartPanel />
-            <form className="card" style={{ padding: "1rem" }} onSubmit={handleOrderSubmit}>
-              <h2 style={{ marginTop: 0 }}>بيانات الطلب</h2>
-              <div className="grid">
-                <input
-                  className="input"
-                  placeholder="الاسم الكامل"
-                  required
-                  value={customer.name}
-                  onChange={(event) => setCustomer((current) => ({ ...current, name: event.target.value }))}
-                />
-                <input
-                  className="input"
-                  placeholder="رقم الهاتف"
-                  required
-                  value={customer.phone}
-                  onChange={(event) => setCustomer((current) => ({ ...current, phone: event.target.value }))}
-                />
-                <textarea
-                  className="textarea"
-                  placeholder="العنوان الكامل (الحي، الشارع، رقم البناية، الطابق، علامة مميزة...)"
-                  required
-                  rows={4}
-                  value={customer.address}
-                  onChange={(event) =>
-                    setCustomer((current) => ({ ...current, address: event.target.value }))
-                  }
-                />
-                <textarea
-                  className="textarea"
-                  placeholder="ملاحظات إضافية للسائق أو المطبخ"
-                  rows={3}
-                  value={customer.notes}
-                  onChange={(event) => setCustomer((current) => ({ ...current, notes: event.target.value }))}
-                />
-                <button className="button button-primary" type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "جارٍ الحفظ..." : "تأكيد الطلب والدفع عند الاستلام"}
-                </button>
+      {/* ===== ORDER SUCCESS ===== */}
+      {createdOrder && (
+        <div className="market-success-banner">
+          <h3>✓ تم إنشاء الطلب بنجاح</h3>
+          <p>رقم الطلب: <strong>{createdOrder.orderNumber}</strong></p>
+          <p className="market-success-hint">احتفظ برقم الطلب لاستخدامه في صفحة التتبع</p>
+        </div>
+      )}
+
+      {/* ===== CATEGORY TABS ===== */}
+      <nav className="market-categories">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            className={`market-cat-tab ${activeCategory === cat ? "active" : ""}`}
+            onClick={() => setActiveCategory(cat)}
+          >
+            {cat}
+          </button>
+        ))}
+      </nav>
+
+      {/* ===== PRODUCT GRID ===== */}
+      <section className="market-products">
+        {filteredMenu.map((item) => (
+          <article key={item.id} className="market-product-card">
+            <div
+              className="market-product-img"
+              style={{ backgroundImage: `url(${item.imageUrl})` }}
+            >
+              <button
+                className={`market-fav-btn ${favorites.has(item.id) ? "active" : ""}`}
+                onClick={() => toggleFavorite(item.id)}
+                aria-label="مفضلة"
+              >
+                <Heart size={16} fill={favorites.has(item.id) ? "currentColor" : "none"} />
+              </button>
+            </div>
+            <div className="market-product-info">
+              <span className="market-product-price">{formatCurrency(item.price)}</span>
+              <h3 className="market-product-name">{item.name}</h3>
+              <button
+                className="market-add-btn"
+                onClick={() => addToCart(item)}
+                aria-label="إضافة إلى السلة"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      {/* ===== FLOATING ACTIONS ===== */}
+      <FloatingActions />
+
+      {/* ===== CART DRAWER ===== */}
+      {showCart && (
+        <div className="market-drawer-overlay" onClick={() => setShowCart(false)}>
+          <aside className="market-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="market-drawer-header">
+              <h2>السلة</h2>
+              <button className="market-drawer-close" onClick={() => setShowCart(false)}>
+                <X size={22} />
+              </button>
+            </div>
+
+            {items.length === 0 ? (
+              <div className="market-empty-cart">
+                <ShoppingBag size={48} strokeWidth={1} />
+                <p>لم تتم إضافة أي وجبة بعد</p>
               </div>
+            ) : (
+              <>
+                <div className="market-cart-items">
+                  {items.map((item) => (
+                    <div key={item.id} className="market-cart-item">
+                      <div
+                        className="market-cart-item-img"
+                        style={{ backgroundImage: `url(${item.imageUrl})` }}
+                      />
+                      <div className="market-cart-item-info">
+                        <strong>{item.name}</strong>
+                        <span className="market-cart-item-price">
+                          {formatCurrency(item.price)}
+                        </span>
+                        <div className="market-cart-item-qty">
+                          <button onClick={() => decreaseQuantity(item.id)}>
+                            <Minus size={14} />
+                          </button>
+                          <span>{item.quantity}</span>
+                          <button onClick={() => addToCart(item)}>
+                            <Plus size={14} />
+                          </button>
+                          <button className="market-cart-item-del" onClick={() => removeFromCart(item.id)}>
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="market-cart-summary">
+                  <div className="market-cart-row">
+                    <span>المجموع الفرعي</span>
+                    <span>{formatCurrency(subtotal)}</span>
+                  </div>
+                  <div className="market-cart-row">
+                    <span>رسوم التوصيل</span>
+                    <span>{formatCurrency(deliveryFee)}</span>
+                  </div>
+                  <div className="market-cart-row market-cart-total">
+                    <strong>الإجمالي</strong>
+                    <strong>{formatCurrency(total)}</strong>
+                  </div>
+                </div>
+
+                <button
+                  className="market-checkout-btn"
+                  onClick={() => { setShowOrderForm(true); setShowCart(false); }}
+                >
+                  إتمام الطلب
+                </button>
+              </>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {/* ===== ORDER FORM DRAWER ===== */}
+      {showOrderForm && (
+        <div className="market-drawer-overlay" onClick={() => setShowOrderForm(false)}>
+          <aside className="market-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="market-drawer-header">
+              <button className="market-drawer-back" onClick={() => { setShowOrderForm(false); setShowCart(true); }}>
+                <ChevronLeft size={22} />
+              </button>
+              <h2>بيانات الطلب</h2>
+              <button className="market-drawer-close" onClick={() => setShowOrderForm(false)}>
+                <X size={22} />
+              </button>
+            </div>
+
+            <form className="market-order-form" onSubmit={handleOrderSubmit}>
+              <input
+                className="market-form-input"
+                placeholder="الاسم الكامل"
+                required
+                value={customer.name}
+                onChange={(e) => setCustomer((c) => ({ ...c, name: e.target.value }))}
+              />
+              <input
+                className="market-form-input"
+                placeholder="رقم الهاتف"
+                required
+                value={customer.phone}
+                onChange={(e) => setCustomer((c) => ({ ...c, phone: e.target.value }))}
+              />
+              <textarea
+                className="market-form-textarea"
+                placeholder="العنوان الكامل (الحي، الشارع، رقم البناية، الطابق...)"
+                required
+                rows={3}
+                value={customer.address}
+                onChange={(e) => setCustomer((c) => ({ ...c, address: e.target.value }))}
+              />
+              <textarea
+                className="market-form-textarea"
+                placeholder="ملاحظات إضافية للسائق أو المطبخ"
+                rows={2}
+                value={customer.notes}
+                onChange={(e) => setCustomer((c) => ({ ...c, notes: e.target.value }))}
+              />
+
+              <div className="market-cart-summary">
+                <div className="market-cart-row market-cart-total">
+                  <strong>الإجمالي</strong>
+                  <strong>{formatCurrency(total)}</strong>
+                </div>
+              </div>
+
+              <button className="market-checkout-btn" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "جارٍ الحفظ..." : "تأكيد الطلب — الدفع عند الاستلام"}
+              </button>
             </form>
-          </div>
-        </section>
-      </main>
-    </>
+          </aside>
+        </div>
+      )}
+    </div>
   );
 }

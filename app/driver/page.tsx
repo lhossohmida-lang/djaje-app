@@ -15,6 +15,8 @@ import {
   updateOrderStatus
 } from "@/services/order-service";
 import { Order } from "@/types";
+import { useRingtone } from "@/hooks/use-ringtone";
+import { InstallAppButton } from "@/components/shared/install-app-button";
 
 export default function DriverPage() {
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
@@ -51,6 +53,9 @@ export default function DriverPage() {
   const dailyEarnings = useMemo(() => {
     return deliveredOrders.reduce((sum, order) => sum + order.deliveryFee, 0);
   }, [deliveredOrders]);
+
+  const hasAvailableOrder = useMemo(() => availableOrders.length > 0, [availableOrders]);
+  useRingtone(loggedIn && hasAvailableOrder);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -180,8 +185,9 @@ export default function DriverPage() {
                 <h1 style={{ marginTop: 0 }}>لوحة السائق</h1>
                 <p style={{ color: "var(--muted)" }}>إدارة الحالات والتوصيل وعرض الأرباح اليومية.</p>
               </div>
-              <div style={{ display: "flex", gap: ".75rem", alignItems: "start" }}>
+              <div style={{ display: "flex", gap: ".75rem", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
                 <span className="badge">أرباح اليوم: {formatCurrency(dailyEarnings)}</span>
+                <InstallAppButton />
                 <button
                   className="button button-secondary"
                   onClick={async () => {
@@ -230,7 +236,7 @@ export default function DriverPage() {
                           className="button button-primary"
                           onClick={() => handleStatusChange(order.id, "delivered")}
                         >
-                          تم التوصيل
+                          تم
                         </button>
                       </div>
                     </article>
