@@ -10,3 +10,4 @@ firebase-debug.log
 .npm-cache/
 .claude/
 serviceAccountKey.json.json
+.vercel
