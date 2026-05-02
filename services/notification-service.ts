@@ -11,10 +11,22 @@ export async function requestBrowserNotificationPermission() {
 }
 
 export async function notify(title: string, body: string) {
-  const permission = await requestBrowserNotificationPermission();
-  if (permission !== "granted") {
-    return;
-  }
+  try {
+    const permission = await requestBrowserNotificationPermission();
+    if (permission !== "granted") {
+      return;
+    }
 
-  new Notification(title, { body });
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      if (registration && "showNotification" in registration) {
+        await registration.showNotification(title, { body });
+        return;
+      }
+    }
+
+    new Notification(title, { body });
+  } catch (err) {
+    console.warn("Failed to show notification:", err);
+  }
 }
