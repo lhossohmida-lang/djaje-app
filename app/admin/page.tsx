@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { BackButton } from "@/components/shared/back-button";
 import { formatCurrency } from "@/lib/utils";
 import { sampleMenu } from "@/data/mock-data";
@@ -159,8 +159,9 @@ export default function AdminPage() {
   return (
     <>
       <main className="page-shell section">
-        <div className="back-row">
+        <div className="back-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <BackButton />
+          <InstallAppButton />
         </div>
         {!loggedIn ? (
           <section className="auth-card">
