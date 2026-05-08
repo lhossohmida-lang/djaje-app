@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Download, ShieldCheck, Truck } from "lucide-react";
+import { Download, ShieldCheck, Truck, MoreVertical } from "lucide-react";
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -12,6 +12,7 @@ type InstallPromptEvent = Event & {
 export function FloatingActions() {
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     function capture(event: Event) {
@@ -64,85 +65,111 @@ export function FloatingActions() {
     window.alert(message);
   }
 
+  const buttonStyle = {
+    width: "48px",
+    height: "48px",
+    borderRadius: "50%",
+    color: "white",
+    display: "flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    border: "none",
+    cursor: "pointer",
+    transition: "transform 0.2s",
+  };
+
   return (
     <div
       style={{
-        display: "flex",
-        justifyContent: "center",
-        gap: "1rem",
-        padding: "2rem 1rem",
-        marginTop: "2rem",
-        borderTop: "1px solid var(--border)",
+        position: "fixed",
+        right: "1rem",
+        top: "1rem",
+        zIndex: 999,
       }}
     >
-      {!isInstalled && (
-        <button
-          onClick={handleInstall}
-          title="تحميل التطبيق"
+      {/* Floating menu button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        title="القائمة"
+        style={{
+          ...buttonStyle,
+          backgroundColor: "var(--primary)",
+          boxShadow: "0 4px 12px rgba(194, 65, 12, 0.3)",
+        }}
+        onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+        onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      >
+        <MoreVertical size={20} />
+      </button>
+
+      {/* Dropdown menu */}
+      {isOpen && (
+        <div
           style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "50%",
-            backgroundColor: "var(--primary)",
-            color: "white",
+            position: "absolute",
+            top: "60px",
+            right: 0,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "none",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(194, 65, 12, 0.3)",
-            transition: "transform 0.2s",
+            flexDirection: "column" as const,
+            gap: "0.5rem",
+            padding: "0.5rem",
+            backgroundColor: "white",
+            borderRadius: "12px",
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
           }}
-          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
-          <Download size={20} />
-        </button>
+          {!isInstalled && (
+            <button
+              onClick={() => {
+                handleInstall();
+                setIsOpen(false);
+              }}
+              title="تحميل التطبيق"
+              style={{
+                ...buttonStyle,
+                backgroundColor: "var(--primary)",
+                boxShadow: "0 2px 8px rgba(194, 65, 12, 0.2)",
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+              onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            >
+              <Download size={20} />
+            </button>
+          )}
+
+          <Link
+            href="/driver"
+            title="صفحة السائق"
+            style={{
+              ...buttonStyle,
+              backgroundColor: "var(--secondary)",
+              boxShadow: "0 2px 8px rgba(20, 83, 45, 0.2)",
+              textDecoration: "none",
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+            onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            onClick={() => setIsOpen(false)}
+          >
+            <Truck size={20} />
+          </Link>
+
+          <Link
+            href="/admin"
+            title="الإدارة"
+            style={{
+              ...buttonStyle,
+              backgroundColor: "#475569",
+              boxShadow: "0 2px 8px rgba(71, 85, 105, 0.2)",
+              textDecoration: "none",
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+            onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            onClick={() => setIsOpen(false)}
+          >
+            <ShieldCheck size={20} />
+          </Link>
+        </div>
       )}
-
-      <Link
-        href="/driver"
-        title="صفحة السائق"
-        style={{
-          width: "48px",
-          height: "48px",
-          borderRadius: "50%",
-          backgroundColor: "var(--secondary)",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          textDecoration: "none",
-          boxShadow: "0 4px 12px rgba(20, 83, 45, 0.3)",
-          transition: "transform 0.2s",
-        }}
-        onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-        onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
-      >
-        <Truck size={20} />
-      </Link>
-
-      <Link
-        href="/admin"
-        title="الإدارة"
-        style={{
-          width: "48px",
-          height: "48px",
-          borderRadius: "50%",
-          backgroundColor: "#475569",
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          textDecoration: "none",
-          boxShadow: "0 4px 12px rgba(71, 85, 105, 0.3)",
-          transition: "transform 0.2s",
-        }}
-        onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-        onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
-      >
-        <ShieldCheck size={20} />
-      </Link>
     </div>
   );
 }
