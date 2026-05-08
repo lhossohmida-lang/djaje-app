@@ -589,9 +589,10 @@ img {
   flex-direction: column;
   background: #fff;
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 2px 12px rgba(36, 23, 15, 0.05);
+  position: relative;
 }
 
 .market-product-card:hover {
@@ -662,7 +663,7 @@ img {
 .market-add-btn {
   position: absolute;
   bottom: 0.6rem;
-  inset-inline-start: 0.7rem;
+  right: 0.7rem;
   width: 30px;
   height: 30px;
   border-radius: 50%;
