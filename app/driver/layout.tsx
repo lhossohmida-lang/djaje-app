@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Djaje Driver Dashboard",
+  title: "Doudou Driver Dashboard",
   manifest: "/driver.webmanifest",
 };
 

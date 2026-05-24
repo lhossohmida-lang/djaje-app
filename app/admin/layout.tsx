@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Djaje Admin Dashboard",
+  title: "Doudou Admin Dashboard",
   manifest: "/admin.webmanifest",
 };
 

@@ -1,7 +1,7 @@
 {
-  "name": "Djaje",
-  "short_name": "Djaje",
-  "description": "نظام طلبات وتوصيل لمطعم جاجي",
+  "name": "Doudou",
+  "short_name": "Doudou",
+  "description": "نظام طلبات وتوصيل لمطعم دودو",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

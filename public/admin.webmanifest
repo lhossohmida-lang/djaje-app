@@ -1,7 +1,7 @@
 {
-  "name": "Djaje Admin",
-  "short_name": "Djaje Admin",
-  "description": "لوحة إدارة مطعم جاجي",
+  "name": "Doudou Admin",
+  "short_name": "Doudou Admin",
+  "description": "لوحة إدارة مطعم دودو",
   "start_url": "/admin",
   "scope": "/",
   "display": "standalone",

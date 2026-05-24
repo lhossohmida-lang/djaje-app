@@ -4,7 +4,7 @@ import { AppProviders } from "@/components/providers/app-providers";
 import { ServiceWorkerRegister } from "@/components/shared/service-worker-register";
 
 export const metadata: Metadata = {
-  title: "Djaje Restaurant System",
+  title: "Doudou Restaurant System",
   description: "Restaurant ordering and delivery system powered by Firebase.",
   manifest: "/manifest.webmanifest",
   icons: {

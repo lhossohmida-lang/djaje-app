@@ -3,10 +3,13 @@ export type UserRole = "admin" | "driver";
 export type OrderStatus =
   | "pending"
   | "confirmed"
+  | "preparing"
+  | "ready"
+  | "delivered"
   | "assigned"
   | "picked_up"
   | "out_for_delivery"
-  | "delivered";
+  | "cancelled";
 
 export interface MenuItem {
   id: string;
@@ -14,6 +17,7 @@ export interface MenuItem {
   description: string;
   category: string;
   price: number;
+  costPrice?: number;
   imageUrl: string;
   available: boolean;
   prepTime: number;
@@ -41,6 +45,13 @@ export interface Order {
   status: OrderStatus;
   driverId?: string | null;
   driverName?: string | null;
+  orderType?: 'table' | 'takeout' | 'delivery';
+  tableNumber?: number;
+  takeoutNumber?: number;
+  driverNumber?: number;
+  isDelivery?: boolean;
+  totalCost?: number;
+  profit?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,3 +76,26 @@ export interface DashboardStats {
   activeOrders: number;
   availableDrivers: number;
 }
+
+export interface Ingredient {
+  id?: string;
+  name: string;
+  unit: string;
+  totalStock: number;
+  totalSpent: number;
+  purchaseCount: number;
+  lastPurchaseAt?: any;
+  createdAt: any;
+  updatedAt: any;
+}
+
+export interface IngredientPurchase {
+  id?: string;
+  ingredientId: string;
+  quantity: number;
+  unitPrice: number;
+  totalCost: number;
+  note?: string;
+  createdAt: any;
+}
+

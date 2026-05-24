@@ -21,20 +21,27 @@ const ordersCollection = collection(db, "orders");
 export const DELIVERY_FEE = 100;
 
 function normalizeOrder(id: string, data: Record<string, unknown>): Order {
-  const created = data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : String(data.createdAt);
-  const updated = data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : String(data.updatedAt);
+  const created = data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : String(data.createdAt || "");
+  const updated = data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : String(data.updatedAt || "");
 
   return {
     id,
-    orderNumber: String(data.orderNumber),
+    orderNumber: String(data.orderNumber || ""),
     customer: data.customer as Order["customer"],
     items: data.items as Order["items"],
-    subtotal: Number(data.subtotal),
-    deliveryFee: Number(data.deliveryFee),
-    total: Number(data.total),
+    subtotal: Number(data.subtotal || 0),
+    deliveryFee: Number(data.deliveryFee || 0),
+    total: Number(data.total || 0),
     status: data.status as OrderStatus,
     driverId: (data.driverId as string | null | undefined) ?? null,
     driverName: (data.driverName as string | null | undefined) ?? null,
+    orderType: data.orderType as Order["orderType"],
+    tableNumber: data.tableNumber ? Number(data.tableNumber) : undefined,
+    takeoutNumber: data.takeoutNumber ? Number(data.takeoutNumber) : undefined,
+    driverNumber: data.driverNumber ? Number(data.driverNumber) : undefined,
+    isDelivery: data.isDelivery !== undefined ? Boolean(data.isDelivery) : undefined,
+    totalCost: data.totalCost ? Number(data.totalCost) : undefined,
+    profit: data.profit ? Number(data.profit) : undefined,
     createdAt: created,
     updatedAt: updated
   };
@@ -44,9 +51,23 @@ export async function createOrder(payload: {
   customer: CustomerInfo;
   items: CartItem[];
   deliveryFee?: number;
+  orderType?: 'table' | 'takeout' | 'delivery';
+  tableNumber?: number;
+  takeoutNumber?: number;
+  driverNumber?: number;
 }) {
   const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const deliveryFee = payload.deliveryFee ?? DELIVERY_FEE;
+  const orderType = payload.orderType || 'delivery';
+  const isDelivery = orderType === 'delivery';
+  const deliveryFee = isDelivery ? (payload.deliveryFee ?? DELIVERY_FEE) : 0;
+  const total = subtotal + deliveryFee;
+
+  const totalCost = payload.items.reduce((sum, item) => {
+    const cost = item.costPrice !== undefined ? item.costPrice : (item.price * 0.6);
+    return sum + cost * item.quantity;
+  }, 0);
+
+  const profit = total - totalCost;
   const orderNumber = generateOrderNumber();
 
   const orderData = {
@@ -55,10 +76,68 @@ export async function createOrder(payload: {
     items: payload.items,
     subtotal,
     deliveryFee,
-    total: subtotal + deliveryFee,
+    total,
     status: "pending" as OrderStatus,
     driverId: null,
     driverName: null,
+    orderType,
+    tableNumber: payload.tableNumber || null,
+    takeoutNumber: payload.takeoutNumber || null,
+    driverNumber: payload.driverNumber || null,
+    isDelivery,
+    totalCost,
+    profit,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+
+  const ref = await addDoc(ordersCollection, orderData);
+  return {
+    id: ref.id,
+    orderNumber
+  };
+}
+
+export async function createAdminOrder(payload: {
+  customer: CustomerInfo;
+  items: CartItem[];
+  deliveryFee?: number;
+  orderType: 'table' | 'takeout' | 'delivery';
+  tableNumber?: number;
+  takeoutNumber?: number;
+  driverNumber?: number;
+}) {
+  const subtotal = payload.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const orderType = payload.orderType;
+  const isDelivery = orderType === 'delivery';
+  const deliveryFee = isDelivery ? (payload.deliveryFee ?? DELIVERY_FEE) : 0;
+  const total = subtotal + deliveryFee;
+
+  const totalCost = payload.items.reduce((sum, item) => {
+    const cost = item.costPrice !== undefined ? item.costPrice : (item.price * 0.6);
+    return sum + cost * item.quantity;
+  }, 0);
+
+  const profit = total - totalCost;
+  const orderNumber = generateOrderNumber();
+
+  const orderData = {
+    orderNumber,
+    customer: payload.customer,
+    items: payload.items,
+    subtotal,
+    deliveryFee,
+    total,
+    status: "preparing" as OrderStatus, // starts in preparing for the kitchen
+    driverId: null,
+    driverName: null,
+    orderType,
+    tableNumber: payload.tableNumber || null,
+    takeoutNumber: payload.takeoutNumber || null,
+    driverNumber: payload.driverNumber || null,
+    isDelivery,
+    totalCost,
+    profit,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };

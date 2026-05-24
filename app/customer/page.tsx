@@ -113,8 +113,8 @@ export default function CustomerPage() {
         </button>
 
         <div className="market-logo">
-          <Image src="/icon-192x192.png" alt="Djaje" width={44} height={44} style={{ borderRadius: "12px" }} />
-          <span className="market-logo-text">DJAJE</span>
+          <Image src="/icon-192x192.png" alt="Doudou" width={44} height={44} style={{ borderRadius: "12px" }} />
+          <span className="market-logo-text">DOUDOU</span>
         </div>
 
         <button

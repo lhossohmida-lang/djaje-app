@@ -14,7 +14,7 @@ const auth = admin.auth();
 
 // ─── ADMIN USER ─────────────────────────────────────────────────────────────
 const adminUser = {
-  email: "admin@djaje.com",
+  email: "admin@doudou.com",
   password: "Admin@12345",
   fullName: "Restaurant Owner",
 };

@@ -3,7 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "export",
   experimental: {
-    devtoolSegmentExplorer: false
+    devtoolSegmentExplorer: false,
+    optimizePackageImports: ["lucide-react"]
   },
   images: {
     unoptimized: true,

@@ -1,7 +1,7 @@
 {
-  "name": "Djaje Driver",
-  "short_name": "Djaje Driver",
-  "description": "لوحة سائق مطعم جاجي",
+  "name": "Doudou Driver",
+  "short_name": "Doudou Driver",
+  "description": "لوحة سائق مطعم دودو",
   "start_url": "/driver",
   "scope": "/",
   "display": "standalone",

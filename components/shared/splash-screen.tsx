@@ -6,15 +6,24 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
   const [phase, setPhase] = useState<"show" | "fadeout">("show");
 
   useEffect(() => {
-    // After 2.8s start fading out
-    const fadeTimer = setTimeout(() => setPhase("fadeout"), 2800);
-    // After 3.5s notify parent it's done
-    const doneTimer = setTimeout(() => onDone(), 3500);
+    // Safety auto-transition after 6.5 seconds of playback
+    const autoTimer = setTimeout(() => {
+      setPhase("fadeout");
+    }, 6500);
+
     return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(doneTimer);
+      clearTimeout(autoTimer);
     };
-  }, [onDone]);
+  }, []);
+
+  useEffect(() => {
+    if (phase === "fadeout") {
+      const doneTimer = setTimeout(() => {
+        onDone();
+      }, 700); // matches the 0.7s opacity transition
+      return () => clearTimeout(doneTimer);
+    }
+  }, [phase, onDone]);
 
   return (
     <>
@@ -29,45 +38,144 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
           align-items: center;
           justify-content: center;
           overflow: hidden;
-          background: #1a0a00;
-          transition: opacity 0.7s ease;
+          background: #080300;
+          transition: opacity 0.7s cubic-bezier(0.25, 1, 0.5, 1);
         }
         .splash-wrap.out {
           opacity: 0;
           pointer-events: none;
         }
 
-        /* ---- Background image ---- */
-        .splash-bg {
+        /* ---- Video background ---- */
+        .splash-video {
           position: absolute;
-          inset: -5%; /* allow room to float without showing edges */
-          background: url('/splash-image.png') center/cover no-repeat;
-          animation: floatBg 4s ease-in-out infinite;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: 0;
+          pointer-events: none;
         }
 
-        @keyframes floatBg {
-          0%, 100% { transform: translateY(0px) scale(1.02); }
-          50% { transform: translateY(-15px) scale(1.02); }
-        }
-
-        /* ---- Dark gradient overlay ---- */
+        /* ---- Premium vignette and overlay ---- */
         .splash-overlay {
           position: absolute;
           inset: 0;
-          background:
-            linear-gradient(to top,   rgba(15,5,0,0.85) 0%, transparent 55%),
-            linear-gradient(to bottom, rgba(15,5,0,0.55) 0%, transparent 40%);
+          background: radial-gradient(
+            circle at center,
+            rgba(8, 3, 0, 0.15) 0%,
+            rgba(8, 3, 0, 0.75) 70%,
+            rgba(8, 3, 0, 0.95) 100%
+          );
+          z-index: 1;
         }
 
-        /* ---- Gold shimmer layer ---- */
+        /* ---- Gold glow filter ---- */
         .splash-gold {
           position: absolute;
           inset: 0;
           background: radial-gradient(
-            ellipse 120% 60% at 50% 90%,
-            rgba(200,130,20,0.18) 0%,
-            transparent 70%
+            ellipse 100% 50% at 50% 100%,
+            rgba(255, 140, 0, 0.1) 0%,
+            transparent 75%
           );
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        /* ---- Interactive Skip Button ---- */
+        .splash-skip-btn {
+          position: absolute;
+          top: 24px;
+          right: 24px;
+          z-index: 10;
+          background: rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          color: #ffffff;
+          padding: 8px 24px;
+          border-radius: 99px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+          direction: rtl;
+        }
+        .splash-skip-btn:hover {
+          background: rgba(255, 255, 255, 0.2);
+          border-color: rgba(255, 140, 0, 0.4);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(255, 140, 0, 0.2);
+        }
+        .splash-skip-btn:active {
+          transform: translateY(0) scale(0.96);
+        }
+
+        /* ---- Content Container ---- */
+        .splash-content {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          padding: 32px;
+          max-width: 90%;
+          animation: fadeInContent 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .splash-logo-container {
+          position: relative;
+          margin-bottom: 20px;
+        }
+
+        .splash-logo {
+          width: 110px;
+          height: 110px;
+          object-fit: contain;
+          filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.5));
+          animation: logoPulse 3s ease-in-out infinite;
+        }
+
+        .splash-logo-glow {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle, rgba(255, 140, 0, 0.4) 0%, transparent 70%);
+          filter: blur(15px);
+          animation: glowPulse 3s ease-in-out infinite;
+          pointer-events: none;
+          z-index: -1;
+        }
+
+        .splash-title {
+          font-size: 3.2rem;
+          font-weight: 900;
+          color: #ffffff;
+          letter-spacing: 6px;
+          margin: 0;
+          text-shadow: 
+            0 2px 10px rgba(0, 0, 0, 0.9),
+            0 0 30px rgba(255, 100, 0, 0.4);
+          text-transform: uppercase;
+        }
+
+        .splash-subtitle {
+          font-size: 1.25rem;
+          color: rgba(255, 255, 255, 0.95);
+          margin-top: 10px;
+          font-weight: 500;
+          letter-spacing: 1px;
+          text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+        }
+
+        .splash-divider {
+          width: 50px;
+          height: 3px;
+          background: linear-gradient(90deg, transparent, #ff8c00, transparent);
+          margin: 16px 0;
+          border-radius: 99px;
         }
 
         /* ---- Smoke particles ---- */
@@ -75,60 +183,114 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
           position: absolute;
           inset: 0;
           pointer-events: none;
+          z-index: 1;
         }
         .smoke-puff {
           position: absolute;
-          bottom: -10%;
+          bottom: -15%;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(200,200,200,0.3) 0%, transparent 60%);
-          filter: blur(20px);
-          animation: smokeRise var(--dur, 4s) ease-in-out var(--delay, 0s) infinite;
+          background: radial-gradient(circle, rgba(255, 140, 0, 0.08) 0%, rgba(200, 200, 200, 0.03) 40%, transparent 70%);
+          filter: blur(25px);
+          animation: smokeRise var(--dur, 5s) ease-in-out var(--delay, 0s) infinite;
           opacity: 0;
           mix-blend-mode: screen;
         }
-        @keyframes smokeRise {
-          0%   { opacity: 0;   transform: translateY(0) scale(0.5); }
-          30%  { opacity: 0.5; }
-          70%  { opacity: 0.4; }
-          100% { opacity: 0;   transform: translateY(-50vh) scale(2.5); }
+
+        /* ---- Keyframes ---- */
+        @keyframes fadeInContent {
+          0% {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
-
-
-        /* ---- Bottom glow line ---- */
-        .splash-glow-line {
-          position: absolute;
-          bottom: 18%;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 60%;
-          height: 2px;
-          background: linear-gradient(90deg, transparent, rgba(255,190,50,0.7), transparent);
-          border-radius: 99px;
-          animation: glowPulse 2s ease-in-out infinite;
-          z-index: 2;
+        @keyframes logoPulse {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.04);
+          }
         }
+
         @keyframes glowPulse {
-          0%,100% { opacity: 0.4; width: 40%; }
-          50%      { opacity: 1;   width: 65%; }
+          0%, 100% {
+            opacity: 0.6;
+            transform: scale(0.9);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.15);
+          }
+        }
+
+        @keyframes smokeRise {
+          0% { 
+            opacity: 0;   
+            transform: translateY(0) scale(0.6) rotate(0deg); 
+          }
+          30% { 
+            opacity: 0.6; 
+          }
+          60% { 
+            opacity: 0.4; 
+          }
+          100% { 
+            opacity: 0;   
+            transform: translateY(-60vh) scale(2.2) rotate(45deg); 
+          }
         }
       `}</style>
 
       <div className={`splash-wrap ${phase === "fadeout" ? "out" : ""}`}>
-        {/* Background */}
-        <div className="splash-bg" />
+        {/* Cinematic Video Background */}
+        <video
+          className="splash-video"
+          src="/intro.mp4"
+          autoPlay
+          muted
+          playsInline
+          loop
+          onEnded={() => setPhase("fadeout")}
+        />
+
+        {/* Overlays */}
         <div className="splash-overlay" />
         <div className="splash-gold" />
 
-        {/* Smoke puffs */}
+        {/* Skip button in Arabic */}
+        <button 
+          className="splash-skip-btn" 
+          onClick={() => setPhase("fadeout")}
+          aria-label="تخطي المقدمة"
+        >
+          تخطي
+        </button>
+
+        {/* Center branding content */}
+        <div className="splash-content">
+          <div className="splash-logo-container">
+            <div className="splash-logo-glow" />
+            <img src="/logo.png" alt="Doudou Logo" className="splash-logo" />
+          </div>
+          <h1 className="splash-title">DOUDOU</h1>
+          <div className="splash-divider" />
+          <p className="splash-subtitle">المذاق الأصيل للدجاج المشوي</p>
+        </div>
+
+        {/* Premium ambient smoke layer */}
         <div className="smoke-container">
           {[
-            { left: "10%", size: 150, dur: "4s",   delay: "0s" },
-            { left: "40%", size: 200, dur: "5s",   delay: "1s" },
-            { left: "70%", size: 180, dur: "4.5s", delay: "2s" },
-            { left: "25%", size: 160, dur: "5.5s", delay: "0.5s" },
-            { left: "60%", size: 220, dur: "4.2s", delay: "1.5s" },
-            { left: "80%", size: 140, dur: "4.8s", delay: "0.8s" },
+            { left: "8%", size: 180, dur: "5.5s", delay: "0s" },
+            { left: "38%", size: 240, dur: "6.5s", delay: "1.2s" },
+            { left: "68%", size: 210, dur: "6s", delay: "2.4s" },
+            { left: "22%", size: 190, dur: "7s", delay: "0.6s" },
+            { left: "55%", size: 260, dur: "5.8s", delay: "1.8s" },
+            { left: "82%", size: 160, dur: "6.2s", delay: "0.9s" },
           ].map((p, i) => (
             <div
               key={i}
@@ -143,11 +305,6 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
             />
           ))}
         </div>
-
-
-
-        {/* Bottom glow line */}
-        <div className="splash-glow-line" />
       </div>
     </>
   );
