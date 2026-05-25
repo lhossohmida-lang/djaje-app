@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import { BackButton } from "@/components/shared/back-button";
 import { formatCurrency } from "@/lib/utils";
 import { sampleMenu } from "@/data/mock-data";
 import { loginWithEmail, logout, registerAdminAccount } from "@/services/auth-service";
 import { createOrUpdateMenuItem, deleteMenuItem, subscribeToMenu } from "@/services/menu-service";
-import { notify } from "@/services/notification-service";
+import { notify, requestBrowserNotificationPermission } from "@/services/notification-service";
 import {
   assignOrderToDriver,
   deleteOrder,
@@ -86,6 +88,7 @@ type AdminTab = "overview" | "orders" | "inventory" | "menu" | "reports";
 
 export default function AdminPage() {
   const [loggedIn, setLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [registerForm, setRegisterForm] = useState({
@@ -137,8 +140,66 @@ export default function AdminPage() {
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<"all" | OrderStatus>("all");
 
+  const [testAlarm, setTestAlarm] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<string>("default");
+
+  // Listen to Firebase Auth state changes for session persistence!
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const role = await getUserRoleByUid(user.uid);
+          if (role === "admin") {
+            setLoggedIn(true);
+          } else {
+            await logout();
+            setLoggedIn(false);
+          }
+        } catch (error) {
+          console.error("Auth state observer error:", error);
+          setLoggedIn(false);
+        }
+      } else {
+        setLoggedIn(false);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotifPermission(Notification.permission);
+    }
+  }, []);
+
+  const handleRequestPermission = async () => {
+    const perm = await requestBrowserNotificationPermission();
+    setNotifPermission(perm);
+    if (perm === "granted") {
+      notify("تم تفعيل التنبيهات بنجاح! 🎉", "تنبيهات الخلفية للطلبات نشطة الآن وتعمل بكفاءة.");
+    } else {
+      window.alert("يجب السماح بالإشعارات في المتصفح لضمان سماع صوت التنبيهات في الخلفية.");
+    }
+  };
+
+  const handlePersistStorage = async () => {
+    if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.persist) {
+      const isPersisted = await navigator.storage.persist();
+      if (isPersisted) {
+        window.alert("تم حماية ملفات التطبيق بنجاح! لن يقوم المتصفح بحذف بياناتك أبداً.");
+      } else {
+        window.alert("لم يتمكن النظام من تفعيل الحفظ الدائم، قد يتم إيقافه بواسطة المتصفح تلقائياً.");
+      }
+    }
+  };
+
   useEffect(() => {
     if (!loggedIn) return;
+    
+    // Proactively request browser notifications
+    requestBrowserNotificationPermission().catch(console.error);
     
     const unsubscribeOrders = subscribeToOrders(setOrders);
     const unsubscribeMenu = subscribeToMenu(setMenuItems);
@@ -177,7 +238,7 @@ export default function AdminPage() {
   );
 
   const hasPendingOrder = useMemo(() => orders.some((o) => o.status === "pending"), [orders]);
-  useRingtone(loggedIn && hasPendingOrder);
+  useRingtone(loggedIn && (hasPendingOrder || testAlarm));
 
   // Authentication Handlers
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
@@ -190,6 +251,10 @@ export default function AdminPage() {
         window.alert("هذا الحساب غير مصرح له بالدخول إلى لوحة الإدارة.");
         return;
       }
+      
+      // Request permission on direct user interaction
+      await requestBrowserNotificationPermission();
+      
       setLoggedIn(true);
     } catch (error) {
       console.error(error);
@@ -209,6 +274,10 @@ export default function AdminPage() {
         email: registerForm.email,
         password: registerForm.password
       });
+      
+      // Request permission on direct user interaction
+      await requestBrowserNotificationPermission();
+      
       setLoggedIn(true);
       setIsRegisterMode(false);
       setRegisterForm({ fullName: "", email: "", password: "", developerCode: "" });
@@ -383,6 +452,29 @@ export default function AdminPage() {
       totalIngredientsSpent
     };
   }, [orders, ingredients]);
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "var(--background)", direction: "rtl" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+          <div style={{ 
+            width: "50px", 
+            height: "50px", 
+            borderRadius: "50%", 
+            border: "5px solid rgba(194, 65, 12, 0.1)", 
+            borderTopColor: "var(--primary)", 
+            animation: "spin 1s linear infinite" 
+          }} />
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+          <strong style={{ color: "var(--text)" }}>جاري التحقق من الجلسة... 🔐</strong>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -637,6 +729,143 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* PWA Background & Alarm Configuration Panel */}
+                <div className="card" style={{ 
+                  padding: "1.8rem", 
+                  borderRadius: "24px", 
+                  background: "linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(253, 246, 238, 0.95))", 
+                  border: "1px solid rgba(194, 65, 12, 0.15)",
+                  boxShadow: "0 10px 30px -10px rgba(194, 65, 12, 0.1)",
+                  animation: "slideDown 0.3s ease"
+                }}>
+                  <style>{`
+                    @keyframes pulseGreen {
+                      0% { transform: scale(0.92); opacity: 0.6; }
+                      50% { transform: scale(1.1); opacity: 1; }
+                      100% { transform: scale(0.92); opacity: 0.6; }
+                    }
+                  `}</style>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem", marginBottom: "1.2rem" }}>
+                    <h3 style={{ fontSize: "1.3rem", fontWeight: "900", color: "var(--primary-dark)", margin: "0", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span>🔔 لوحة التحكم الفائقة لتنبيهات وجرس الخلفية</span>
+                    </h3>
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <span className="badge" style={{ 
+                        background: "rgba(34, 197, 94, 0.1)", 
+                        color: "#166534", 
+                        border: "1px solid rgba(34, 197, 94, 0.2)",
+                        fontWeight: "bold",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.4rem"
+                      }}>
+                        <span style={{ 
+                          width: "8px", 
+                          height: "8px", 
+                          borderRadius: "50%", 
+                          backgroundColor: "#22c55e",
+                          display: "inline-block",
+                          animation: "pulseGreen 1.5s infinite"
+                        }} />
+                        حارس خمول الخلفية: نشط 🟢
+                      </span>
+                    </div>
+                  </div>
+
+                  <p style={{ color: "var(--muted)", fontSize: "0.95rem", margin: "0 0 1.5rem 0", lineHeight: "1.6" }}>
+                    لضمان استمرار عمل التطبيق في الخلفية <strong>وسماع صوت جرس المطبخ القوي دائماً</strong> حتى ولو لم يكن التطبيق مفتوحاً في الواجهة أو كان الهاتف مقفلاً، يرجى التحقق وتفعيل الصلاحيات التالية:
+                  </p>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "1.5rem" }}>
+                    {/* Status Box */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", background: "rgba(36, 23, 15, 0.02)", padding: "1.2rem", borderRadius: "16px", border: "1px solid var(--border)" }}>
+                      <h4 style={{ margin: "0 0 0.2rem 0", fontSize: "1rem", fontWeight: "bold" }}>حالة الأذونات والاتصال:</h4>
+                      
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.9rem" }}>
+                        <span>إذن إشعارات المتصفح والـ PWA:</span>
+                        <span style={{ fontWeight: "bold", color: notifPermission === "granted" ? "#166534" : "#b91c1c" }}>
+                          {notifPermission === "granted" ? "🟢 مسموح ومفعّل" : "🔴 غير مسموح (اضغط للتفعيل)"}
+                        </span>
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.9rem" }}>
+                        <span>حارس منع التجميد (Audio Lock):</span>
+                        <span style={{ fontWeight: "bold", color: "#166534" }}>🟢 نشط ويحمي من الخمول</span>
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.9rem" }}>
+                        <span>منع إيقاف الشاشة (Wake Lock):</span>
+                        <span style={{ fontWeight: "bold", color: "#166534" }}>🟢 مفعّل ويحمي جهازك 🖥️</span>
+                      </div>
+                    </div>
+
+                    {/* Actions Box */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", justifyContent: "center" }}>
+                      {notifPermission !== "granted" && (
+                        <button 
+                          onClick={handleRequestPermission}
+                          className="button button-primary"
+                          style={{ fontWeight: "bold", padding: "0.85rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
+                        >
+                          <span>تفعيل أذونات إشعارات النظام 🔔</span>
+                        </button>
+                      )}
+                      
+                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <button
+                          onClick={() => {
+                            if (testAlarm) {
+                              setTestAlarm(false);
+                            } else {
+                              setTestAlarm(true);
+                              setTimeout(() => setTestAlarm(false), 4000);
+                            }
+                          }}
+                          className="button"
+                          style={{ 
+                            flex: 1, 
+                            fontWeight: "bold", 
+                            padding: "0.85rem", 
+                            background: testAlarm ? "#ef4444" : "rgba(194, 65, 12, 0.1)", 
+                            color: testAlarm ? "#fff" : "var(--primary)",
+                            border: "1px solid var(--primary)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "0.5rem"
+                          }}
+                        >
+                          <span>{testAlarm ? "⏹️ إيقاف الجرس" : "🔊 اختبار جرس المطبخ القوي"}</span>
+                        </button>
+
+                        <button 
+                          onClick={handlePersistStorage}
+                          className="button button-secondary"
+                          style={{ flex: 1, fontWeight: "bold", padding: "0.85rem" }}
+                        >
+                          💾 حماية بيانات المتجر
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Device Guides */}
+                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <h4 style={{ margin: "0 0 0.5rem 0", fontSize: "0.95rem", fontWeight: "bold", color: "var(--text)", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <Info size={16} />
+                      <span>💡 إرشادات هامة لضمان عمل الإنذار دائماً في الخلفية:</span>
+                    </h4>
+                    <ul style={{ margin: "0", paddingRight: "1.2rem", color: "var(--muted)", fontSize: "0.85rem", lineHeight: "1.6" }}>
+                      <li style={{ marginBottom: "0.4rem" }}>
+                        <strong>لهواتف وأجهزة أندرويد (Android):</strong> اضغط مطولاً على أيقونة التطبيق المثبت في الشاشة الرئيسية ← اختر <strong>معلومات التطبيق (App Info)</strong> ← <strong>البطارية (Battery)</strong> ← اختر <strong>غير مقيدة (Unrestricted)</strong> لمنع نظام التشغيل من النوم أو كتم صوت التنبيه بالخلفية.
+                      </li>
+                      <li>
+                        <strong>لأجهزة الكمبيوتر والمتصفح (Desktop/Chrome):</strong> تأكد من تفعيل صلاحية <strong>التشغيل التلقائي للصوت (Allow Sound Autoplay)</strong> في إعدادات الموقع بالمتصفح وقفل علامة التبويب Pin Tab لتظل نشطة طوال اليوم.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
                 <div className="card" style={{ padding: "1.5rem" }}>
                   <h2 style={{ fontSize: "1.25rem", margin: "0 0 1rem" }}>نسب قنوات الطلب المتنوعة (DOUDOU)</h2>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
@@ -875,7 +1104,7 @@ export default function AdminPage() {
 
                 {/* Driver Customer Info Input Form Form Modal */}
                 {driverPhoneStep && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", position: "fixed", top: "0", bottom: "0", left: "0", right: "0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", position: "fixed", top: "0", bottom: "0", left: "0", right: "0", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
                     <div className="card" style={{ background: "#fff", padding: "2rem", width: "100%", maxWidth: "450px", position: "relative", borderRadius: "18px" }}>
                       <h3 style={{ margin: "0 0 1rem", fontSize: "1.2rem", color: "var(--text)" }}>تسجيل بيانات العميل (للتوصيل عبر سائق {driverPhoneStep.driverNumber})</h3>
                       <div className="grid" style={{ display: "grid", gap: "0.85rem" }}>
@@ -1457,7 +1686,7 @@ export default function AdminPage() {
 
             {/* ORDER DETAIL VIEW MODAL */}
             {selectedOrder && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", position: "fixed", top: "0", bottom: "0", left: "0", right: "0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", position: "fixed", top: "0", bottom: "0", left: "0", right: "0", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
                 <div className="card" style={{ background: "#fff", padding: "2rem", width: "100%", maxWidth: "550px", maxHeight: "90vh", overflowY: "auto", borderRadius: "18px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                     <h3 style={{ margin: "0", fontSize: "1.3rem", fontWeight: "900", color: "var(--text)" }}>تفاصيل طلب رقم #{selectedOrder.orderNumber}</h3>
@@ -1508,7 +1737,7 @@ export default function AdminPage() {
 
             {/* NEW ORDER SELECTION & MENU CART MODAL (Walk-in Cashier Creator) */}
             {newOrderContext && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", position: "fixed", top: "0", bottom: "0", left: "0", right: "0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", position: "fixed", top: "0", bottom: "0", left: "0", right: "0", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
                 <NewOrderBuilderModal
                   menuItems={menuItems}
                   context={newOrderContext}

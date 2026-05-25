@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BackButton } from "@/components/shared/back-button";
 import { OrderStatusBadge } from "@/components/shared/order-status-badge";
 import { auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { loginWithEmail, logout, registerDriverAccount } from "@/services/auth-service";
 import {
@@ -17,6 +18,7 @@ import {
 import { Order } from "@/types";
 import { useRingtone } from "@/hooks/use-ringtone";
 import { InstallAppButton } from "@/components/shared/install-app-button";
+import { requestBrowserNotificationPermission } from "@/services/notification-service";
 
 export default function DriverPage() {
   const [availableOrders, setAvailableOrders] = useState<Order[]>([]);
@@ -30,14 +32,33 @@ export default function DriverPage() {
     password: ""
   });
   const [loggedIn, setLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [driverName, setDriverName] = useState("سائق التوصيل");
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+
+  // Listen to Firebase Auth changes for persistent driver session!
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setDriverName(user.displayName || user.email?.split("@")[0] || "سائق التوصيل");
+        setLoggedIn(true);
+      } else {
+        setLoggedIn(false);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (!loggedIn || !uid) {
       return;
     }
+
+    // Proactively request browser notifications for driver
+    requestBrowserNotificationPermission().catch(console.error);
 
     const unsubscribeAvailable = subscribeToAvailableOrders(setAvailableOrders);
     const unsubscribeMine = subscribeToDriverOrders(uid, setMyOrders);
@@ -62,6 +83,10 @@ export default function DriverPage() {
     try {
       await loginWithEmail(credentials.email, credentials.password);
       setDriverName(credentials.email.split("@")[0] || "سائق التوصيل");
+      
+      // Request permission on direct user interaction
+      await requestBrowserNotificationPermission();
+      
       setLoggedIn(true);
     } catch (error) {
       console.error(error);
@@ -74,6 +99,10 @@ export default function DriverPage() {
     try {
       await registerDriverAccount(registerForm);
       setDriverName(registerForm.fullName || registerForm.email.split("@")[0] || "سائق التوصيل");
+      
+      // Request permission on direct user interaction
+      await requestBrowserNotificationPermission();
+      
       setLoggedIn(true);
     } catch (error) {
       console.error(error);
@@ -102,6 +131,29 @@ export default function DriverPage() {
       console.error(error);
       window.alert("تعذر قبول الطلب.");
     }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "var(--background)", direction: "rtl" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }}>
+          <div style={{ 
+            width: "50px", 
+            height: "50px", 
+            borderRadius: "50%", 
+            border: "5px solid rgba(194, 65, 12, 0.1)", 
+            borderTopColor: "var(--primary)", 
+            animation: "spin 1s linear infinite" 
+          }} />
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+          <strong style={{ color: "var(--text)" }}>جاري التحقق من الجلسة... 🔐</strong>
+        </div>
+      </div>
+    );
   }
 
   return (
